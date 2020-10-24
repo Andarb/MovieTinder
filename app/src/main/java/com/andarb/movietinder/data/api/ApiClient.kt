@@ -29,8 +29,7 @@ object ApiClient {
             val url = originalHttpUrl.newBuilder()
                 .addQueryParameter("api_key", BuildConfig.API_KEY).build()
             request.url(url)
-            val response = chain.proceed(request.build())
-            return@addInterceptor response
+            return@addInterceptor chain.proceed(request.build())
         }
         return okHttpBuilder.build()
     }
