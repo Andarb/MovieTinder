@@ -1,14 +1,21 @@
-package com.andarb.movietinder
+package com.andarb.movietinder.view
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.andarb.movietinder.data.model.Movie
+import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ItemMovieCardBinding
+import com.andarb.movietinder.model.Movie
+import com.andarb.movietinder.util.load
+import kotlin.properties.Delegates
 
-class MovieCardAdapter(private val movies: List<Movie>) :
+class MovieCardAdapter :
     RecyclerView.Adapter<MovieCardAdapter.MovieViewHolder>() {
+
+    var items: List<Movie> by Delegates.observable(emptyList()) { _, _, _ ->
+        notifyDataSetChanged()
+    }
 
     class MovieViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = ItemMovieCardBinding.bind(itemView)
@@ -32,8 +39,8 @@ class MovieCardAdapter(private val movies: List<Movie>) :
     }
 
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
-        holder.bind(movies[position])
+        holder.bind(items[position])
     }
 
-    override fun getItemCount() = movies.size
+    override fun getItemCount() = items.size
 }

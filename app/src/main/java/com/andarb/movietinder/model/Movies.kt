@@ -1,4 +1,4 @@
-package com.andarb.movietinder.data.model
+package com.andarb.movietinder.model
 
 import com.google.gson.annotations.SerializedName
 

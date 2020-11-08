@@ -1,4 +1,4 @@
-package com.andarb.movietinder
+package com.andarb.movietinder.util
 
 import android.widget.ImageView
 import com.bumptech.glide.Glide

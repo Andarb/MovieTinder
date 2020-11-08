@@ -1,7 +1,7 @@
-package com.andarb.movietinder.data.api
+package com.andarb.movietinder.model.api
 
-import com.andarb.movietinder.data.model.Movie
-import com.andarb.movietinder.data.model.Movies
+import com.andarb.movietinder.model.Movie
+import com.andarb.movietinder.model.Movies
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
