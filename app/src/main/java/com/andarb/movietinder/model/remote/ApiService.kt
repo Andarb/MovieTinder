@@ -1,4 +1,4 @@
-package com.andarb.movietinder.model.api
+package com.andarb.movietinder.model.remote
 
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.Movies
