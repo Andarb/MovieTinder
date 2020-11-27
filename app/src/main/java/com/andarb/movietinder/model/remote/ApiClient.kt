@@ -1,4 +1,4 @@
-package com.andarb.movietinder.model.api
+package com.andarb.movietinder.model.remote
 
 import com.andarb.movietinder.BuildConfig
 import okhttp3.OkHttpClient
