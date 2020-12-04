@@ -7,6 +7,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.andarb.movietinder.model.Movie
 
+/**
+ * Manages the liked/disliked movies' table.
+ */
 @Dao
 interface MovieDao {
     @Query("SELECT * FROM movie_table WHERE isLiked = 1 ORDER BY createdAt DESC")

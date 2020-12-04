@@ -8,6 +8,9 @@ import androidx.room.TypeConverters
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.Converters
 
+/**
+ * Creates or retrieves a db with liked/disliked movies.
+ */
 @Database(entities = [Movie::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MovieDatabase : RoomDatabase() {

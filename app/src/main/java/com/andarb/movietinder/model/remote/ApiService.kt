@@ -6,7 +6,9 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/* Uses The Movie Database (TMDb) API */
+/**
+ * Retrieves a list of popular movies or detailed information.
+ */
 interface ApiService {
 
     @GET(MOST_POPULAR_PATH)

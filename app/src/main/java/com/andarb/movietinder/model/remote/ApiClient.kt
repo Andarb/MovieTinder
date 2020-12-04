@@ -5,7 +5,9 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-/* Connects to The Movie Database (TMDb) */
+/**
+ * Connects to The Movie Database (TMDb) using the unique [BuildConfig.API_KEY].
+ */
 object ApiClient {
 
     private const val BASE_URL = "https://api.themoviedb.org/3/movie/"
