@@ -10,6 +10,9 @@ import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.load
 import kotlin.properties.Delegates
 
+/**
+ * Binds movie details in CardStackView.
+ */
 class MovieCardAdapter :
     RecyclerView.Adapter<MovieCardAdapter.MovieViewHolder>() {
 

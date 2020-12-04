@@ -37,13 +37,14 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         super.onStop()
     }
 
+    /** Saves user selection on swipe */
     override fun onCardSwiped(direction: Direction?) {
         val isLiked = direction == Direction.Right
 
         viewModel.saveMovie(layoutManager.topPosition - 1, isLiked)
     }
 
-    // Unused implementations
+    /** Unused implementations */
     override fun onCardDragging(direction: Direction?, ratio: Float) {}
     override fun onCardRewound() {}
     override fun onCardCanceled() {}

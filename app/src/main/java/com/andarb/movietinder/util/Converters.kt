@@ -3,6 +3,9 @@ package com.andarb.movietinder.util
 import androidx.room.TypeConverter
 import java.util.*
 
+/**
+ * Allows storing and retrieving date value from local db.
+ */
 class Converters {
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {
