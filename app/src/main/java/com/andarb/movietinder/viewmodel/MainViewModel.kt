@@ -44,10 +44,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun saveMovie(index: Int, isLiked: Boolean) {
         val item = _items.value?.getOrNull(index)
 
-        item?.let { record ->
-            record.isLiked = isLiked
-            record.createdAt = Date()
-            viewModelScope.launch(Dispatchers.IO) { movieDao.insert(record) }
+        item?.let { movie ->
+            movie.isLiked = isLiked
+            movie.createdAt = Date()
+            viewModelScope.launch { movieDao.insert(movie) }
         }
     }
 

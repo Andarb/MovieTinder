@@ -1,10 +1,16 @@
 package com.andarb.movietinder.view
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ActivityMainBinding
+import com.andarb.movietinder.view.adapters.MovieCardAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
 import com.yuyakaido.android.cardstackview.CardStackListener
@@ -42,6 +48,30 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         val isLiked = direction == Direction.Right
 
         viewModel.saveMovie(layoutManager.topPosition - 1, isLiked)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.activity_main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val intent = Intent(this, SavedListActivity::class.java)
+
+        return when (item.itemId) {
+            R.id.menu_liked -> {
+                intent.putExtra(EXTRA_ISLIKED, true)
+                startActivity(intent)
+                true
+            }
+            R.id.menu_disliked -> {
+                intent.putExtra(EXTRA_ISLIKED, false)
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     /** Unused implementations */
