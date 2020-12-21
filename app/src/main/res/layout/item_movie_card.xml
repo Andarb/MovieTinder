@@ -11,29 +11,29 @@
         android:layout_height="match_parent">
 
         <ImageView
-            android:id="@+id/image_poster"
+            android:id="@+id/image_card_poster"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
-            android:contentDescription="@string/poster_description"
+            android:contentDescription="@string/description_poster"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:srcCompat="@tools:sample/backgrounds/scenic[1]" />
 
         <TextView
-            android:id="@+id/text_date"
+            android:id="@+id/text_card_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginBottom="16dp"
             android:textColor="@color/colorAccent"
-            app:layout_constraintBottom_toBottomOf="@+id/image_poster"
+            app:layout_constraintBottom_toBottomOf="@+id/image_card_poster"
             app:layout_constraintStart_toStartOf="parent"
             tools:text="@tools:sample/lorem" />
 
         <TextView
-            android:id="@+id/text_overview"
+            android:id="@+id/text_card_overview"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="24dp"
@@ -41,18 +41,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/image_poster"
+            app:layout_constraintTop_toBottomOf="@+id/image_card_poster"
             tools:text="@tools:sample/lorem/random" />
 
         <TextView
-            android:id="@+id/text_rating"
+            android:id="@+id/text_card_rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:textColor="@color/colorAccent"
             android:textSize="24sp"
-            app:layout_constraintBottom_toBottomOf="@+id/text_date"
-            app:layout_constraintEnd_toEndOf="@+id/image_poster"
+            app:layout_constraintBottom_toBottomOf="@+id/text_card_date"
+            app:layout_constraintEnd_toEndOf="@+id/image_card_poster"
             tools:text="@tools:sample/date/ddmmyy" />
 
 

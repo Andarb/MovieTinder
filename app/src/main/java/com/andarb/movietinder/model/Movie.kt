@@ -17,6 +17,7 @@ data class Movie(
     @SerializedName("vote_average") val rating: Float,
     @SerializedName("release_date") val date: String,
     @SerializedName("poster_path") val posterUrl: String?,
+
     var isLiked: Boolean,
     var createdAt: Date
 )

@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Movie Tinder</string>
 
-    <string name="poster_description">Movie poster</string>
+    <string name="description_poster">Movie poster</string>
+
+    <string name="menu_title_liked">Liked Movies</string>
+    <string name="menu_title_disliked">Disliked Movies</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.andarb.movietinder.view
+package com.andarb.movietinder.view.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -25,10 +25,10 @@ class MovieCardAdapter :
 
         fun bind(item: Movie) {
             with(binding) {
-                imagePoster.load(item.posterUrl)
-                textRating.text = item.rating.toString()
-                textDate.text = item.date
-                textOverview.text = item.overview
+                imageCardPoster.load(item.posterUrl)
+                textCardRating.text = item.rating.toString()
+                textCardDate.text = item.date
+                textCardOverview.text = item.overview
             }
         }
     }
