@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ItemMovieCardBinding
 import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.util.load
+import com.andarb.movietinder.util.download
 import kotlin.properties.Delegates
 
 /**
@@ -25,7 +25,7 @@ class MovieCardAdapter :
 
         fun bind(item: Movie) {
             with(binding) {
-                imageCardPoster.load(item.posterUrl)
+                imageCardPoster.download(item.posterUrl, item.id)
                 textCardRating.text = item.rating.toString()
                 textCardDate.text = item.date
                 textCardOverview.text = item.overview
