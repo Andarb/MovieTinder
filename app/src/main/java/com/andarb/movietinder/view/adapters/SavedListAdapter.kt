@@ -24,7 +24,7 @@ class SavedListAdapter : RecyclerView.Adapter<SavedListAdapter.ListViewHolder>()
 
         fun bind(item: Movie) {
             with(binding) {
-                imageEntryPoster.load(item.posterUrl)
+                imageEntryPoster.load(item.posterUrl, item.id)
                 textEntryTitle.text = item.title
                 textEntryRating.text = item.rating.toString()
                 textEntryDate.text = item.date
