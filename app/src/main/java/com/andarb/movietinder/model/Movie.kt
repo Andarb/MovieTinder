@@ -7,7 +7,7 @@ import java.util.*
 
 /**
  * Movie details retrieved from TMDb API and deserialized via GSON are stored here.
- * Also used as an Entity for a local db. Properties [isLiked] and [createdAt] are unique to db.
+ * Also used as an Entity for a local db. Properties [isLiked] and [modifiedAt] are unique to db.
  */
 @Entity(tableName = "movie_table")
 data class Movie(
@@ -19,5 +19,5 @@ data class Movie(
     @SerializedName("poster_path") val posterUrl: String?,
 
     var isLiked: Boolean,
-    var createdAt: Date
+    var modifiedAt: Date
 )
