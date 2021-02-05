@@ -10,11 +10,33 @@
         android:id="@+id/image_entry_poster"
         android:layout_width="wrap_content"
         android:layout_height="128dp"
+        android:adjustViewBounds="true"
         android:contentDescription="@string/description_poster"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:adjustViewBounds="true"
         tools:srcCompat="@tools:sample/avatars" />
+
+    <ImageView
+        android:id="@+id/image_entry_like"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:contentDescription="@string/description_like"
+        app:layout_constraintBottom_toBottomOf="@+id/text_entry_rating"
+        app:layout_constraintEnd_toStartOf="@+id/image_entry_delete"
+        app:layout_constraintTop_toTopOf="@+id/text_entry_rating"
+        app:srcCompat="@android:drawable/btn_star" />
+
+    <ImageView
+        android:id="@+id/image_entry_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/description_delete"
+        app:layout_constraintBottom_toBottomOf="@+id/image_entry_like"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/image_entry_like"
+        app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
 
     <TextView
         android:id="@+id/text_entry_title"

@@ -9,6 +9,7 @@ import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.Movies
 import com.andarb.movietinder.model.local.MovieDatabase
 import com.andarb.movietinder.model.remote.ApiClient
+import com.andarb.movietinder.util.checkAndRun
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,11 +43,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Saves user selection into local db */
     fun saveMovie(index: Int, isLiked: Boolean) {
-        val item = _items.value?.getOrNull(index)
-
-        item?.let { movie ->
+        _items.checkAndRun(index) { movie ->
             movie.isLiked = isLiked
-            movie.createdAt = Date()
+            movie.modifiedAt = Date()
             viewModelScope.launch { movieDao.insert(movie) }
         }
     }
