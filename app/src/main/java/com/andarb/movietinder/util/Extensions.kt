@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
 import com.andarb.movietinder.model.Movie
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
@@ -49,11 +49,11 @@ fun ImageView.load(imagePath: String?, fileId: Int) {
 }
 
 /**
- * Confirms the MutableLiveData object contains a value.
+ * Confirms the LiveData object contains a value.
  * Checks if the provided element in the list exists.
  * Finally, applies a passed on lambda onto the confirmed non-null element.
  */
-fun MutableLiveData<List<Movie>>.checkAndRun(index: Int, action: (Movie) -> Unit) {
+fun LiveData<List<Movie>>.checkAndRun(index: Int, action: (Movie) -> Unit) {
     val item = this.value?.getOrNull(index)
 
     item?.let { action(it) }
