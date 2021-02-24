@@ -34,8 +34,6 @@ class MainActivity : AppCompatActivity(), CardStackListener {
             adapter.items = items
             viewModel.position?.let { layoutManager.scrollToPosition(it) }
         })
-
-        viewModel.retrieveMovies()
     }
 
     override fun onStop() {

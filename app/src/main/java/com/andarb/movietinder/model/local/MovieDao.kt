@@ -1,5 +1,6 @@
 package com.andarb.movietinder.model.local
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.andarb.movietinder.model.Movie
 
@@ -9,7 +10,7 @@ import com.andarb.movietinder.model.Movie
 @Dao
 interface MovieDao {
     @Query("SELECT * FROM movie_table WHERE isLiked = :isLiked ORDER BY modifiedAt DESC")
-    suspend fun getMovies(isLiked: Boolean): List<Movie>
+    fun getMovies(isLiked: Boolean): LiveData<List<Movie>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(movie: Movie)

@@ -6,13 +6,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.model.Movies
-import com.andarb.movietinder.model.local.MovieDatabase
-import com.andarb.movietinder.model.remote.ApiClient
+import com.andarb.movietinder.model.MovieRepository
 import com.andarb.movietinder.util.checkAndRun
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -21,24 +17,17 @@ import java.util.*
  * Saves movies into local db when requested.
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = MovieRepository(application)
+
     private val _items = MutableLiveData<List<Movie>>()
     val items: LiveData<List<Movie>> get() = _items
 
     private var _position: Int? = null
     val position: Int? get() = _position
 
-    private val movieDao = MovieDatabase.getDatabase(application).movieDao()
-
     /** Does a network request for a list of movies */
-    fun retrieveMovies() {
-        if (_items.value == null) {
-            viewModelScope.launch {
-                val client = ApiClient.create()
-                val result: Movies = withContext(Dispatchers.IO) { client.getPopularMovies() }
-
-                _items.value = result.movies
-            }
-        }
+    init {
+        viewModelScope.launch { _items.value = repository.downloadMovies() }
     }
 
     /** Saves user selection into local db */
@@ -46,7 +35,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _items.checkAndRun(index) { movie ->
             movie.isLiked = isLiked
             movie.modifiedAt = Date()
-            viewModelScope.launch { movieDao.insert(movie) }
+            viewModelScope.launch { repository.insert(movie) }
         }
     }
 
