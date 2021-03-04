@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.databinding.ActivitySavedListBinding
+import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.view.adapters.SavedListAdapter
 import com.andarb.movietinder.viewmodel.SavedListViewModel
@@ -26,8 +27,8 @@ class SavedListActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val isLikedExtra = intent.getBooleanExtra(EXTRA_ISLIKED, true)
-        val adapter = SavedListAdapter { pos: Int, clickType: ClickType ->
-            viewModel.onClick(pos, clickType)
+        val adapter = SavedListAdapter { movie: Movie, clickType: ClickType ->
+            viewModel.onClick(movie, clickType)
         }
 
         binding.recyclerviewMovies.adapter = adapter
