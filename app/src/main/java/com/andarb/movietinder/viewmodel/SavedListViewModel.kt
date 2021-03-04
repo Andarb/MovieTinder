@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.MovieRepository
 import com.andarb.movietinder.util.ClickType
-import com.andarb.movietinder.util.checkAndRun
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -21,19 +20,16 @@ class SavedListViewModel(application: Application, isLiked: Boolean) :
     val items: LiveData<List<Movie>> = repository.retrieveMovies(isLiked)
 
     /** Handles clicks on RecyclerView items' buttons */
-    fun onClick(index: Int, clickType: ClickType) {
-        items.checkAndRun(index) { movie ->
-            viewModelScope.launch {
-                when (clickType) {
-                    ClickType.LIKE -> {
-                        movie.modifiedAt = Date()
-                        movie.isLiked = !(movie.isLiked)
-                        repository.update(movie)
-                    }
-                    ClickType.DELETE -> repository.delete(movie)
+    fun onClick(movie: Movie, clickType: ClickType) {
+        viewModelScope.launch {
+            when (clickType) {
+                ClickType.LIKE -> {
+                    movie.isLiked = !(movie.isLiked)
+                    movie.modifiedAt = Date()
+                    repository.update(movie)
                 }
+                ClickType.DELETE -> repository.delete(movie)
             }
         }
     }
-
 }

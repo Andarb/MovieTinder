@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.lifecycle.LiveData
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.model.Movie
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
@@ -57,4 +59,23 @@ fun LiveData<List<Movie>>.checkAndRun(index: Int, action: (Movie) -> Unit) {
     val item = this.value?.getOrNull(index)
 
     item?.let { action(it) }
+}
+
+/**
+ * Implements Diffutil logic for RecyclerView adapters.
+ */
+fun RecyclerView.Adapter<*>.notifyChange(oldList: List<Movie>, newList: List<Movie>) {
+    val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+            oldList[oldItemPosition].id == newList[newItemPosition].id
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+            oldList[oldItemPosition] == newList[newItemPosition]
+    })
+
+    diff.dispatchUpdatesTo(this)
 }

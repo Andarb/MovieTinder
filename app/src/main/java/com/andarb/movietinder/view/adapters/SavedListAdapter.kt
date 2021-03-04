@@ -9,25 +9,26 @@ import com.andarb.movietinder.databinding.ItemMovieEntryBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.util.load
+import com.andarb.movietinder.util.notifyChange
 import kotlin.properties.Delegates
 
 /**
- * Binds movie details in RecyclerView.
+ * Binds movie details of a saved list.
  */
-class SavedListAdapter(private val itemClickListener: (Int, ClickType) -> Unit) :
+class SavedListAdapter(private val itemClickListener: (Movie, ClickType) -> Unit) :
     RecyclerView.Adapter<SavedListAdapter.ListViewHolder>() {
 
-    var items: List<Movie> by Delegates.observable(emptyList()) { _, _, _ ->
-        notifyDataSetChanged()
+    var items: List<Movie> by Delegates.observable(emptyList()) { _, oldList, newList ->
+        notifyChange(oldList, newList)
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = ItemMovieEntryBinding.bind(itemView)
 
-        fun bind(item: Movie, pos: Int, clickListener: (Int, ClickType) -> Unit) {
+        fun bind(item: Movie, clickListener: (Movie, ClickType) -> Unit) {
             with(binding) {
-                imageEntryLike.setOnClickListener { clickListener(pos, ClickType.LIKE) }
-                imageEntryDelete.setOnClickListener { clickListener(pos, ClickType.DELETE) }
+                imageEntryLike.setOnClickListener { clickListener(item, ClickType.LIKE) }
+                imageEntryDelete.setOnClickListener { clickListener(item, ClickType.DELETE) }
                 imageEntryPoster.load(item.posterUrl, item.id)
                 textEntryTitle.text = item.title
                 textEntryRating.text = item.rating.toString()
@@ -45,7 +46,7 @@ class SavedListAdapter(private val itemClickListener: (Int, ClickType) -> Unit) 
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        holder.bind(items[position], position, itemClickListener)
+        holder.bind(items[position], itemClickListener)
     }
 
     override fun getItemCount() = items.size

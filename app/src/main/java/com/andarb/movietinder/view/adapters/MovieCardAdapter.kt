@@ -8,6 +8,7 @@ import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ItemMovieCardBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.download
+import com.andarb.movietinder.util.notifyChange
 import kotlin.properties.Delegates
 
 /**
@@ -16,8 +17,8 @@ import kotlin.properties.Delegates
 class MovieCardAdapter :
     RecyclerView.Adapter<MovieCardAdapter.MovieViewHolder>() {
 
-    var items: List<Movie> by Delegates.observable(emptyList()) { _, _, _ ->
-        notifyDataSetChanged()
+    var items: List<Movie> by Delegates.observable(emptyList()) { _, oldList, newList ->
+        notifyChange(oldList, newList)
     }
 
     class MovieViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
