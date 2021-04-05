@@ -5,9 +5,14 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.model.MovieRepository
-import com.andarb.movietinder.util.checkAndRun
+import com.andarb.movietinder.model.repository.MoviePagingSource
+import com.andarb.movietinder.model.repository.MovieRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -22,20 +27,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _items = MutableLiveData<List<Movie>>()
     val items: LiveData<List<Movie>> get() = _items
 
+    val movies: Flow<PagingData<Movie>> = Pager(PagingConfig(pageSize = 20)) { MoviePagingSource() }
+        .flow
+        .cachedIn(viewModelScope)
+
     private var _position: Int? = null
     val position: Int? get() = _position
 
-    /** Does a network request for a list of movies */
-    init {
-        viewModelScope.launch { _items.value = repository.downloadMovies() }
-    }
-
     /** Saves user selection into local db */
-    fun saveMovie(index: Int, isLiked: Boolean) {
-        _items.checkAndRun(index) { movie ->
-            movie.isLiked = isLiked
-            movie.modifiedAt = Date()
-            viewModelScope.launch { repository.insert(movie) }
+    fun saveMovie(movie: Movie?, isLiked: Boolean) {
+        movie?.let {
+            it.isLiked = isLiked
+            it.modifiedAt = Date()
+            viewModelScope.launch { repository.insert(it) }
         }
     }
 

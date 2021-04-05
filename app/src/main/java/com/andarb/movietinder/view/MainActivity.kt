@@ -8,6 +8,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ActivityMainBinding
 import com.andarb.movietinder.view.adapters.MovieCardAdapter
@@ -15,6 +16,8 @@ import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
 import com.yuyakaido.android.cardstackview.CardStackListener
 import com.yuyakaido.android.cardstackview.Direction
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), CardStackListener {
     private val layoutManager: CardStackLayoutManager = CardStackLayoutManager(this, this)
@@ -30,10 +33,13 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         binding.cardstackMovies.adapter = adapter
 
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        viewModel.items.observe(this, { items ->
-            adapter.items = items
-            viewModel.position?.let { layoutManager.scrollToPosition(it) }
-        })
+
+        lifecycleScope.launch {
+            viewModel.movies.collectLatest { items ->
+                adapter.submitData(items)
+                viewModel.position?.let { layoutManager.scrollToPosition(it) }
+            }
+        }
     }
 
     override fun onStop() {
@@ -43,9 +49,10 @@ class MainActivity : AppCompatActivity(), CardStackListener {
 
     /** Saves user selection on swipe */
     override fun onCardSwiped(direction: Direction?) {
+        val movie = adapter.peek(layoutManager.topPosition - 1)
         val isLiked = direction == Direction.Right
 
-        viewModel.saveMovie(layoutManager.topPosition - 1, isLiked)
+        viewModel.saveMovie(movie, isLiked)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
