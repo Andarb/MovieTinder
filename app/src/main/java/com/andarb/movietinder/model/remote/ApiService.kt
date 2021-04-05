@@ -12,7 +12,7 @@ import retrofit2.http.Query
 interface ApiService {
 
     @GET(MOST_POPULAR_PATH)
-    suspend fun getPopularMovies(): Movies
+    suspend fun getPopularMovies(@Query(PAGE_QUERY) page: Int): Movies
 
     @GET(MOVIE_ID_PATH_MASK)
     suspend fun getMovieDetails(
@@ -24,6 +24,7 @@ interface ApiService {
         const val MOVIE_ID_PATH_MASK = "{movie_id}"
         const val MOVIE_ID_PATH = "movie_id"
         const val APPEND_QUERY = "append_to_response"
+        const val PAGE_QUERY = "page"
         const val MOST_POPULAR_PATH = "popular"
     }
 }

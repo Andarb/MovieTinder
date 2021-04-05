@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.model.MovieRepository
+import com.andarb.movietinder.model.repository.MovieRepository
 import com.andarb.movietinder.util.ClickType
 import kotlinx.coroutines.launch
 import java.util.*
