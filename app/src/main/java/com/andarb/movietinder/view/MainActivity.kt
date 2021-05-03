@@ -35,21 +35,13 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
         lifecycleScope.launch {
-            viewModel.movies.collectLatest { items ->
-                adapter.submitData(items)
-                viewModel.position?.let { layoutManager.scrollToPosition(it) }
-            }
+            viewModel.movies.collectLatest { adapter.submitData(it) }
         }
     }
 
-    override fun onStop() {
-        viewModel.saveScrollPosition(layoutManager.topPosition)
-        super.onStop()
-    }
-
     /** Saves user selection on swipe */
-    override fun onCardSwiped(direction: Direction?) {
-        val movie = adapter.peek(layoutManager.topPosition - 1)
+    override fun onCardSwiped(direction: Direction?, swipedPosition: Int) {
+        val movie = adapter.peek(swipedPosition)
         val isLiked = direction == Direction.Right
 
         viewModel.saveMovie(movie, isLiked)
@@ -79,7 +71,7 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         }
     }
 
-    /** Unused implementations */
+    /** Unused implementations for CardStackView */
     override fun onCardDragging(direction: Direction?, ratio: Float) {}
     override fun onCardRewound() {}
     override fun onCardCanceled() {}
