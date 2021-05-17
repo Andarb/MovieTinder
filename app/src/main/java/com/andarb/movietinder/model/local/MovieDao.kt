@@ -21,6 +21,6 @@ interface MovieDao {
     @Delete
     suspend fun delete(movie: Movie)
 
-    @Query("DELETE FROM movie_table")
-    suspend fun deleteAll()
+    @Query("DELETE FROM movie_table WHERE isLiked = :isLiked")
+    suspend fun deleteList(isLiked: Boolean)
 }

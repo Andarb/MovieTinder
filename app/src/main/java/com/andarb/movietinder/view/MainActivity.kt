@@ -57,13 +57,13 @@ class MainActivity : AppCompatActivity(), CardStackListener {
         val intent = Intent(this, SavedListActivity::class.java)
 
         return when (item.itemId) {
-            R.id.menu_liked -> {
-                intent.putExtra(EXTRA_ISLIKED, true)
+            R.id.menu_disliked -> {
+                intent.putExtra(EXTRA_ISLIKED, false)
                 startActivity(intent)
                 true
             }
-            R.id.menu_disliked -> {
-                intent.putExtra(EXTRA_ISLIKED, false)
+            R.id.menu_liked -> {
+                intent.putExtra(EXTRA_ISLIKED, true)
                 startActivity(intent)
                 true
             }
