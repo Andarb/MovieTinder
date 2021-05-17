@@ -24,4 +24,8 @@ class MovieRepository(application: Application) {
     suspend fun delete(movie: Movie) {
         movieDao.delete(movie)
     }
+
+    suspend fun deleteList(isLiked: Boolean) {
+        movieDao.deleteList(isLiked)
+    }
 }

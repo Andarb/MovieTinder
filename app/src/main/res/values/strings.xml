@@ -6,6 +6,7 @@
     <string name="description_dislike">Dislike</string>
     <string name="description_delete">Delete</string>
 
-    <string name="menu_title_liked">Liked Movies</string>
-    <string name="menu_title_disliked">Disliked Movies</string>
+    <string name="menu_title_liked">Liked</string>
+    <string name="menu_title_disliked">Disliked</string>
+    <string name="menu_title_clear">Clear</string>
 </resources>

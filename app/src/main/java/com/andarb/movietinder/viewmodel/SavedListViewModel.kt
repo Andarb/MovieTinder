@@ -32,4 +32,9 @@ class SavedListViewModel(application: Application, isLiked: Boolean) :
             }
         }
     }
+
+    /** Removes all liked or disliked movies from DB */
+    fun clearMovies(isLiked: Boolean) {
+        viewModelScope.launch { repository.deleteList(isLiked) }
+    }
 }
