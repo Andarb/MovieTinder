@@ -13,7 +13,7 @@ import com.andarb.movietinder.util.notifyChange
 import kotlin.properties.Delegates
 
 /**
- * Binds movie details of a saved list.
+ * Binds movie details from a saved db list.
  */
 class SavedListAdapter(private val itemClickListener: (Movie, ClickType) -> Unit) :
     RecyclerView.Adapter<SavedListAdapter.ListViewHolder>() {
