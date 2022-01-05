@@ -12,6 +12,9 @@ interface MovieDao {
     @Query("SELECT * FROM movie_table WHERE isLiked = :isLiked ORDER BY modifiedAt DESC")
     fun getMovies(isLiked: Boolean): LiveData<List<Movie>>
 
+    @Query("SELECT id FROM movie_table WHERE isLiked = 1 ORDER BY modifiedAt DESC")
+    fun getLikedMovieIds(): List<Int>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(movie: Movie)
 

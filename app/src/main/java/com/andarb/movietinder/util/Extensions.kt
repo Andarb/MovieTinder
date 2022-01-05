@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.model.Movie
+import com.andarb.movietinder.view.adapters.EndpointAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -18,6 +19,11 @@ import java.io.FileOutputStream
 
 private const val POSTER_BASE_URL = "https://image.tmdb.org/t/p/"
 private const val POSTER_SIZE = "w500" // applicable sizes "w92", "w154", "w185", "w342" and "w780"
+
+/** Allows different classes to use same Diffutil functionality as long as they have an [id] field */
+interface DiffutilComparison {
+    val id: Any
+}
 
 /** Downloads, saves to internal storage and displays the movie poster */
 fun ImageView.download(imagePath: String?, fileId: Int) {
@@ -61,10 +67,12 @@ fun LiveData<List<Movie>>.checkAndRun(index: Int, action: (Movie) -> Unit) {
     item?.let { action(it) }
 }
 
-/**
- * Implements Diffutil logic for RecyclerView adapters.
- */
-fun RecyclerView.Adapter<*>.notifyChange(oldList: List<Movie>, newList: List<Movie>) {
+
+/** Implements Diffutil logic for RecyclerView adapters */
+fun <T> RecyclerView.Adapter<*>.notifyChange(
+    oldList: List<T>,
+    newList: List<T>
+) where T : DiffutilComparison {
     val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
 
         override fun getOldListSize() = oldList.size
@@ -78,4 +86,26 @@ fun RecyclerView.Adapter<*>.notifyChange(oldList: List<Movie>, newList: List<Mov
     })
 
     diff.dispatchUpdatesTo(this)
+}
+
+/** Removes an element from the endpoint list and notifies the adapter of the change */
+fun EndpointAdapter.removeElement(elementId: String) {
+    val index = this.items.indexOfFirst { it.id == elementId }
+
+
+    if (index != -1) {
+        this.items[index].isConnected = false
+        this.items.removeAt(index)
+        this.notifyItemRemoved(index)
+    }
+}
+
+/** Marks an endpoint in the list as connected and notifies the adapter of the change */
+fun EndpointAdapter.markAsConnected(elementId: String) {
+    val index = this.items.indexOfFirst { it.id == elementId }
+
+    if (index != -1) {
+        this.items[index].isConnected = true
+        this.notifyItemChanged(index)
+    }
 }

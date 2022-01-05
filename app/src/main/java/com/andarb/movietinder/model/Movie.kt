@@ -2,6 +2,7 @@ package com.andarb.movietinder.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.andarb.movietinder.util.DiffutilComparison
 import com.google.gson.annotations.SerializedName
 import java.util.*
 
@@ -11,7 +12,7 @@ import java.util.*
  */
 @Entity(tableName = "movie_table")
 data class Movie(
-    @PrimaryKey val id: Int,
+    @PrimaryKey override val id: Int,
     val title: String,
     val overview: String,
     @SerializedName("vote_average") val rating: Float,
@@ -20,4 +21,4 @@ data class Movie(
 
     var isLiked: Boolean,
     var modifiedAt: Date
-)
+) : DiffutilComparison

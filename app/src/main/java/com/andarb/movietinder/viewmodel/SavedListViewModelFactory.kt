@@ -15,7 +15,7 @@ class SavedListViewModelFactory(
 ) :
     ViewModelProvider.AndroidViewModelFactory(application) {
 
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SavedListViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return SavedListViewModel(application, isLiked) as T

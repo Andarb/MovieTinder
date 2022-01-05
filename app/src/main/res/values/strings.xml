@@ -1,12 +1,30 @@
 <resources>
     <string name="app_name">Movie Tinder</string>
 
+    /** Image content descriptions */
     <string name="description_poster">Movie poster</string>
     <string name="description_like">Like</string>
     <string name="description_dislike">Dislike</string>
     <string name="description_delete">Delete</string>
 
+    /** App menu titles */
+    <string name="menu_title_connect">Connect</string>
     <string name="menu_title_liked">Liked</string>
     <string name="menu_title_disliked">Disliked</string>
     <string name="menu_title_clear">Clear</string>
+
+    /** Endpoint device ID formatting */
+    <string name="formatting_id">[%1$s]</string>
+
+    /** Dialog box requesting failed permissions */
+    <string name="dialog_permissions_button_title">Permissions required</string>
+    <string name="dialog_permissions_button_message">This app requires <b>Nearby Devices</b> and
+        <b>Location</b> permissions to be able to find and communicate with nearby devices. Please
+        open the app <b>Settings</b> to enable the necessary permissions.</string>
+    <string name="dialog_permissions_button_cancel">Cancel</string>
+    <string name="dialog_permissions_button_settings">Settings</string>
+
+    /** User displayed error messages */
+    <string name="error_insufficient_permissions">Unable to scan for nearby devices\n\nPlease allow the
+        necessary permissions in the app Settings</string>
 </resources>
