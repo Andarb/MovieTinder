@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/connectFragment">
+
+    <fragment
+        android:id="@+id/connectFragment"
+        android:name="com.andarb.movietinder.view.ConnectFragment"
+        android:label="Connect">
+        <action
+            android:id="@+id/action_connectFragment_to_selectionFragment"
+            app:destination="@id/selectionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/selectionFragment"
+        android:name="com.andarb.movietinder.view.SelectionFragment"
+        android:label="Selection" />
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.andarb.movietinder.view.HistoryFragment"
+        android:label="History" />
+</navigation>

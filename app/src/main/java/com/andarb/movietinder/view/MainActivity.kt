@@ -1,84 +1,69 @@
 package com.andarb.movietinder.view
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ActivityMainBinding
-import com.andarb.movietinder.view.adapters.MovieCardAdapter
-import com.andarb.movietinder.viewmodel.MainViewModel
-import com.yuyakaido.android.cardstackview.CardStackLayoutManager
-import com.yuyakaido.android.cardstackview.CardStackListener
-import com.yuyakaido.android.cardstackview.Direction
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), CardStackListener {
-    private val layoutManager: CardStackLayoutManager = CardStackLayoutManager(this, this)
-    private val adapter = MovieCardAdapter()
-    private lateinit var viewModel: MainViewModel
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var navController: NavController
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.cardstackMovies.layoutManager = layoutManager
-        binding.cardstackMovies.adapter = adapter
+        // Setup NavigationController
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
 
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        // Setup ActionBar
+        appBarConfiguration =
+            AppBarConfiguration(setOf(R.id.connectFragment, R.id.historyFragment))
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
-        lifecycleScope.launch {
-            viewModel.movies.collectLatest { adapter.submitData(it) }
+        // Setup BottomNavigation
+        with(binding) {
+            bottomNavigation.setupWithNavController(navController)
+
+            bottomNavigation.setOnItemSelectedListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.bottom_navigation_connect -> {
+                        navController.navigate(R.id.connectFragment)
+                        true
+                    }
+                    R.id.bottom_navigation_matches -> {
+                        navController.navigate(R.id.historyFragment)
+                        true
+                    }
+                    R.id.bottom_navigation_history -> {
+                        navController.navigate(R.id.historyFragment)
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            navController.addOnDestinationChangedListener { _, destination, _ ->
+                when (destination.id) {
+                    R.id.selectionFragment -> bottomNavigation.visibility = View.GONE
+                    else -> bottomNavigation.visibility = View.VISIBLE
+                }
+            }
         }
     }
 
-    /** Saves user selection on swipe */
-    override fun onCardSwiped(direction: Direction?, swipedPosition: Int) {
-        val movie = adapter.peek(swipedPosition)
-        val isLiked = direction == Direction.Right
-
-        viewModel.saveMovie(movie, isLiked)
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        val inflater: MenuInflater = menuInflater
-        inflater.inflate(R.menu.activity_main, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val intent = Intent(this, SavedListActivity::class.java)
-
-        return when (item.itemId) {
-            R.id.menu_connect -> {
-                startActivity(Intent(this, ConnectActivity::class.java))
-                true
-            }
-            R.id.menu_disliked -> {
-                intent.putExtra(EXTRA_ISLIKED, false)
-                startActivity(intent)
-                true
-            }
-            R.id.menu_liked -> {
-                intent.putExtra(EXTRA_ISLIKED, true)
-                startActivity(intent)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    /** Unused implementations for CardStackView */
-    override fun onCardDragging(direction: Direction?, ratio: Float) {}
-    override fun onCardRewound() {}
-    override fun onCardCanceled() {}
-    override fun onCardAppeared(view: View?, position: Int) {}
-    override fun onCardDisappeared(view: View?, position: Int) {}
 }
