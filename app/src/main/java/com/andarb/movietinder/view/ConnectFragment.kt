@@ -2,6 +2,7 @@ package com.andarb.movietinder.view
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.Application
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -9,14 +10,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.MenuItem
-import android.view.View
+import android.util.Log
+import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
-import com.andarb.movietinder.databinding.ActivityConnectBinding
+import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.repository.MovieRepository
 import com.andarb.movietinder.util.markAsConnected
@@ -32,7 +34,7 @@ import kotlinx.coroutines.launch
  * Scans for nearby devices willing to connect.
  * Establishes connection and data exchange between connected devices.
  */
-class ConnectActivity : AppCompatActivity() {
+class ConnectFragment : Fragment() {
     private lateinit var repository: MovieRepository
     private lateinit var localMovieIds: List<Int>
     private lateinit var remoteMovieIds: List<Int>
@@ -52,23 +54,49 @@ class ConnectActivity : AppCompatActivity() {
 
     }
     private val adapter = EndpointAdapter(endpointClickListener)
-    private lateinit var binding: ActivityConnectBinding
+    private lateinit var binding: FragmentConnectBinding
+    private lateinit var application: Application
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityConnectBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentConnectBinding.inflate(inflater, container, false)
 
-        binding.recyclerviewConnect.layoutManager = LinearLayoutManager(this)
+        setHasOptionsMenu(true)
+
+        application = activity!!.application
+        binding.recyclerviewConnect.layoutManager = LinearLayoutManager(application)
         binding.recyclerviewConnect.adapter = adapter
 
+        // TODO Transfer to Viewmodel
         repository = MovieRepository(application)
-        lifecycleScope.launch(Dispatchers.IO) { localMovieIds = repository.retrieveMovieIds() }
+        lifecycleScope.launch(Dispatchers.IO) {
+            localMovieIds = repository.retrieveMovieIds()
+            localMovieIds
+        }
 
         checkPermissions()
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_connect, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_refresh -> {
+                // TODO Stop then scan for devices again
+                // Update the list of nearby devices or prompt for permissions
+                if (this::connectionsClient.isInitialized) startDiscovery() else checkPermissions()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     /** Confirm or request required permissions */
@@ -102,7 +130,7 @@ class ConnectActivity : AppCompatActivity() {
     /** Show the reason for requiring requested permissions */
     private fun showPermissionsRationale() {
         binding.tvErrorPermissions.visibility = View.VISIBLE
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(activity)
 
         with(builder)
         {
@@ -113,7 +141,7 @@ class ConnectActivity : AppCompatActivity() {
             ) { _, _ ->
                 val intent = Intent(
                     Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", packageName, null)
+                    Uri.fromParts("package", application.packageName, null)
                 )
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
@@ -127,8 +155,8 @@ class ConnectActivity : AppCompatActivity() {
     private fun scanForDevices() {
         binding.tvErrorPermissions.visibility = View.INVISIBLE
         deviceName =
-            (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.name
-        connectionsClient = Nearby.getConnectionsClient(applicationContext)
+            (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.name
+        connectionsClient = Nearby.getConnectionsClient(application.applicationContext)
 
         startAdvertising()
         startDiscovery()
@@ -139,7 +167,7 @@ class ConnectActivity : AppCompatActivity() {
         val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
         connectionsClient.startAdvertising(
             deviceName,
-            applicationContext.packageName,
+            application.packageName,
             connectionLifecycleCallback,
             advertisingOptions
         )
@@ -155,13 +183,14 @@ class ConnectActivity : AppCompatActivity() {
     private fun startDiscovery() {
         val discoveryOptions = DiscoveryOptions.Builder().setStrategy(strategy).build()
         connectionsClient.startDiscovery(
-            applicationContext.packageName,
+            application.packageName,
             endpointDiscoveryCallback,
             discoveryOptions
         )
             .addOnSuccessListener { _: Void? ->
             }
             .addOnFailureListener { e: java.lang.Exception? ->
+                Log.d("ConnectFragment", e.toString())
             }
     }
 
@@ -195,11 +224,13 @@ class ConnectActivity : AppCompatActivity() {
                         // We're connected! Can now start sending and receiving data.
                         adapter.markAsConnected(endpointId)
                         connectionsClient.stopDiscovery()
+                        findNavController().navigate(R.id.selectionFragment)
 
-                        val bytesPayload =
-                            Payload.fromBytes(localMovieIds.joinToString(",").toByteArray())
+                        // TODO Transfer to Selection Fragment
+//                        val bytesPayload =
+//                            Payload.fromBytes(localMovieIds.joinToString(",").toByteArray())
+//                        connectionsClient.sendPayload(endpointId, bytesPayload)
 
-                        connectionsClient.sendPayload(endpointId, bytesPayload)
 
                     }
                     ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
@@ -230,11 +261,12 @@ class ConnectActivity : AppCompatActivity() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             // This always gets the full data of the payload. Will be null if it's not a BYTES
             // payload. You can check the payload type with payload.getType().
+
+            // TODO Transfer to Selection Fragment
             val payloadBytes = payload.asBytes()
 
             if (payloadBytes != null) {
                 remoteMovieIds = payloadBytes.decodeToString().split(",").map { it.toInt() }
-
                 // TODO Utilize the matched movies
                 val matchedMovies = localMovieIds.intersect(remoteMovieIds.toSet())
             }
@@ -254,23 +286,6 @@ class ConnectActivity : AppCompatActivity() {
             connectionsClient.stopDiscovery()
             adapter.items.clear()
             adapter.notifyDataSetChanged()
-        }
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-
-        // Update the list of nearby devices or prompt for permissions
-        if (this::connectionsClient.isInitialized) startDiscovery() else checkPermissions()
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                onBackPressed()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 }

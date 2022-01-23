@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottom_navigation_connect"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_connect_24"
+        android:title="@string/bottom_navigation_title_connect" />
+    <item
+        android:id="@+id/bottom_navigation_matches"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_matches_24"
+        android:title="@string/bottom_navigation_title_matches" />
+    <item
+        android:id="@+id/bottom_navigation_history"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_history_24"
+        android:title="@string/bottom_navigation_title_history" />
+</menu>
