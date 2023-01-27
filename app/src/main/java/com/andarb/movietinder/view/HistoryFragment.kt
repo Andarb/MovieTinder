@@ -2,22 +2,25 @@ package com.andarb.movietinder.view
 
 import android.os.Bundle
 import android.view.*
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentHistoryBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.ClickType
-import com.andarb.movietinder.view.adapters.SavedListAdapter
+import com.andarb.movietinder.view.adapters.HistoryAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
 
 /**
- * Displays a previously compiled list of either liked or disliked movies.
+ * Displays a list of previously browsed movies.
  */
 class HistoryFragment : Fragment() {
 
-    private lateinit var viewModel: MainViewModel
+    private val sharedViewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,32 +28,37 @@ class HistoryFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val binding = FragmentHistoryBinding.inflate(inflater, container, false)
-        setHasOptionsMenu(true)
+        createMenu()
 
-        val adapter = SavedListAdapter { movie: Movie, clickType: ClickType ->
-            viewModel.onClick(movie, clickType)
+        val adapter = HistoryAdapter { movie: Movie, clickType: ClickType ->
+            sharedViewModel.onClick(movie, clickType)
         }
 
         binding.recyclerviewMovies.adapter = adapter
         binding.recyclerviewMovies.layoutManager = LinearLayoutManager(context)
 
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        viewModel.dbMovies.observe(this, { adapter.items = it })
+        sharedViewModel.dbMovies.observe(viewLifecycleOwner) { adapter.items = it }
 
         return binding.root
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_history, menu)
-    }
+    private fun createMenu() {
+        val menuHost: MenuHost = requireActivity()
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_clear -> {
-                viewModel.clearMovies(true)
-                true
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_history, menu)
             }
-            else -> super.onOptionsItemSelected(item)
-        }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_clear -> {
+                        sharedViewModel.clearMovies(true)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 }

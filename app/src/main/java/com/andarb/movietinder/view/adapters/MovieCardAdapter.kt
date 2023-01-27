@@ -12,7 +12,7 @@ import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.download
 
 /**
- * Binds movie details in CardStackView.
+ * Binds downloaded movie details for user to choose from.
  */
 class MovieCardAdapter :
     PagingDataAdapter<Movie, MovieCardAdapter.MovieViewHolder>(Comparator) {

@@ -7,9 +7,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Retrieves a list of popular movies or detailed information.
+ * Retrieves a list of popular movies or detailed information of a specific movie.
  */
-interface ApiService {
+interface RetrofitService {
 
     @GET(MOST_POPULAR_PATH)
     suspend fun getPopularMovies(@Query(PAGE_QUERY) page: Int): Movies
