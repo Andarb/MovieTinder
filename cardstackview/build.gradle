@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.3.1'
     }
 }
 
@@ -17,6 +17,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 31
     }
+    namespace 'com.yuyakaido.android.cardstackview'
 }
 
 dependencies {

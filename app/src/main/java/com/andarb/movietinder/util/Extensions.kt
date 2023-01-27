@@ -5,11 +5,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.view.adapters.EndpointAdapter
+import com.andarb.movietinder.model.Endpoint
+import com.andarb.movietinder.model.Endpoints
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -56,18 +56,6 @@ fun ImageView.load(imagePath: String?, fileId: Int) {
     if (bitmap != null) this.setImageBitmap(bitmap) else this.download(imagePath, fileId)
 }
 
-/**
- * Confirms the LiveData object contains a value.
- * Checks if the provided element in the list exists.
- * Finally, applies a passed on lambda onto the confirmed non-null element.
- */
-fun LiveData<List<Movie>>.checkAndRun(index: Int, action: (Movie) -> Unit) {
-    val item = this.value?.getOrNull(index)
-
-    item?.let { action(it) }
-}
-
-
 /** Implements Diffutil logic for RecyclerView adapters */
 fun <T> RecyclerView.Adapter<*>.notifyChange(
     oldList: List<T>,
@@ -88,24 +76,46 @@ fun <T> RecyclerView.Adapter<*>.notifyChange(
     diff.dispatchUpdatesTo(this)
 }
 
-/** Removes an element from the endpoint list and notifies the adapter of the change */
-fun EndpointAdapter.removeElement(elementId: String) {
-    val index = this.items.indexOfFirst { it.id == elementId }
+/** Removes an element from the endpoint list and notifies observer */
+fun MutableLiveData<Endpoints>.removeElement(elementId: String) {
+    val oldList = this.value
+    val oldEndpoints = oldList?.endpoints
 
+    if (!oldEndpoints.isNullOrEmpty()) {
+        val index = oldEndpoints.indexOfFirst { it.id == elementId }
 
-    if (index != -1) {
-        this.items[index].isConnected = false
-        this.items.removeAt(index)
-        this.notifyItemRemoved(index)
+        if (index != -1) {
+            oldEndpoints[index].isConnected = false
+            oldEndpoints.removeAt(index)
+            this.value = oldList
+        }
+    } else {
+        this.value?.endpoints = mutableListOf()
+        this.value = oldList
     }
 }
 
-/** Marks an endpoint in the list as connected and notifies the adapter of the change */
-fun EndpointAdapter.markAsConnected(elementId: String) {
-    val index = this.items.indexOfFirst { it.id == elementId }
+/** Adds an element to the endpoint list and notifies observer */
+fun MutableLiveData<Endpoints>.addElement(element: Endpoint) {
+    val oldList = this.value
+    val oldEndpoints = oldList?.endpoints
 
-    if (index != -1) {
-        this.items[index].isConnected = true
-        this.notifyItemChanged(index)
+    oldEndpoints?.add(element)
+    this.value = oldList
+}
+
+/** Marks an endpoint in the list as connected and notifies observer */
+fun MutableLiveData<Endpoints>.markConnected(elementId: String) {
+    val oldList = this.value
+    val oldEndpoints = oldList?.endpoints
+
+    if (!oldEndpoints.isNullOrEmpty()) {
+        val index = oldEndpoints.indexOfFirst { it.id == elementId }
+
+        if (index != -1) {
+            oldEndpoints[index].isConnected = true
+            oldList.connectedId = elementId
+            this.value = oldList
+        }
     }
 }

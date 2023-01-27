@@ -33,4 +33,5 @@
     /** User displayed error messages */
     <string name="error_insufficient_permissions">Unable to scan for nearby devices\n\nPlease allow the
         necessary permissions in the app Settings</string>
+    <string name="error_insufficient_permissions_devicename">MissingPermissionsName</string>
 </resources>

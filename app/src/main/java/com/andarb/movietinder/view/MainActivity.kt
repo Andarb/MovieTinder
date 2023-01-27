@@ -12,6 +12,9 @@ import androidx.navigation.ui.setupWithNavController
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ActivityMainBinding
 
+/**
+ * Sets up bottom navigation and navigation controller
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var navController: NavController
@@ -29,34 +32,22 @@ class MainActivity : AppCompatActivity() {
 
         // Setup ActionBar
         appBarConfiguration =
-            AppBarConfiguration(setOf(R.id.connectFragment, R.id.historyFragment))
+            AppBarConfiguration(
+                setOf(
+                    R.id.connectFragmentNav,
+                    R.id.matchesFragmentNav,
+                    R.id.historyFragmentNav
+                )
+            )
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         // Setup BottomNavigation
         with(binding) {
             bottomNavigation.setupWithNavController(navController)
 
-            bottomNavigation.setOnItemSelectedListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.bottom_navigation_connect -> {
-                        navController.navigate(R.id.connectFragment)
-                        true
-                    }
-                    R.id.bottom_navigation_matches -> {
-                        navController.navigate(R.id.historyFragment)
-                        true
-                    }
-                    R.id.bottom_navigation_history -> {
-                        navController.navigate(R.id.historyFragment)
-                        true
-                    }
-                    else -> false
-                }
-            }
-
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 when (destination.id) {
-                    R.id.selectionFragment -> bottomNavigation.visibility = View.GONE
+                    R.id.selectionFragmentNav -> bottomNavigation.visibility = View.GONE
                     else -> bottomNavigation.visibility = View.VISIBLE
                 }
             }

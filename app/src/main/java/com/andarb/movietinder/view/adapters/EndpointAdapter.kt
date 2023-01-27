@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ItemEndpointBinding
@@ -12,7 +13,7 @@ import com.andarb.movietinder.util.notifyChange
 import kotlin.properties.Delegates
 
 /**
- * Binds details of found nearby devices
+ * Binds endpoint details of found nearby devices.
  */
 class EndpointAdapter(private val clickListener: (Endpoint) -> Unit) :
     RecyclerView.Adapter<EndpointAdapter.ViewHolder>() {
@@ -29,7 +30,10 @@ class EndpointAdapter(private val clickListener: (Endpoint) -> Unit) :
                 textEndpointName.text = item.name
                 textEndpointId.text =
                     binding.root.context.getString(R.string.formatting_id, item.id)
-                if (item.isConnected) itemView.setBackgroundColor(Color.CYAN)
+                if (item.isConnected) {
+                    itemView.setBackgroundColor(Color.CYAN)
+                    itemView.findNavController().navigate(R.id.selectionFragmentNav)
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.andarb.movietinder.view
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Application
 import android.bluetooth.BluetoothManager
@@ -10,24 +11,21 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
-import com.andarb.movietinder.model.repository.MovieRepository
-import com.andarb.movietinder.util.markAsConnected
-import com.andarb.movietinder.util.removeElement
+import com.andarb.movietinder.model.remote.NearbyClient
 import com.andarb.movietinder.view.adapters.EndpointAdapter
-import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.connection.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.andarb.movietinder.viewmodel.MainViewModel
 
 /**
  * Using 'Nearby API' advertises availability for connection.
@@ -35,27 +33,14 @@ import kotlinx.coroutines.launch
  * Establishes connection and data exchange between connected devices.
  */
 class ConnectFragment : Fragment() {
-    private lateinit var repository: MovieRepository
-    private lateinit var localMovieIds: List<Int>
-    private lateinit var remoteMovieIds: List<Int>
-    private val strategy = Strategy.P2P_POINT_TO_POINT
-    private lateinit var connectionsClient: ConnectionsClient
-    private lateinit var deviceName: String
-    private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
-        connectionsClient
-            .requestConnection(deviceName, endpoint.id, connectionLifecycleCallback)
-            .addOnSuccessListener { _: Void? ->
-                // We successfully requested a connection. Now both sides
-                // must accept before the connection is established.
-            }
-            .addOnFailureListener { e: java.lang.Exception? ->
-                // Nearby Connections failed to request the connection.
-            }
-
-    }
-    private val adapter = EndpointAdapter(endpointClickListener)
+    private lateinit var nearbyClient: NearbyClient
     private lateinit var binding: FragmentConnectBinding
     private lateinit var application: Application
+    private lateinit var adapter: EndpointAdapter
+    private val sharedViewModel: MainViewModel by activityViewModels()
+    private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
+        nearbyClient.connect(endpoint.id)
+    }
 
 
     override fun onCreateView(
@@ -63,19 +48,22 @@ class ConnectFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        application = requireActivity().application
         binding = FragmentConnectBinding.inflate(inflater, container, false)
 
-        setHasOptionsMenu(true)
-
-        application = activity!!.application
-        binding.recyclerviewConnect.layoutManager = LinearLayoutManager(application)
+        adapter = EndpointAdapter(endpointClickListener)
+        binding.tvErrorPermissions.visibility = View.INVISIBLE
+        binding.recyclerviewConnect.layoutManager = LinearLayoutManager(context)
         binding.recyclerviewConnect.adapter = adapter
 
-        // TODO Transfer to Viewmodel
-        repository = MovieRepository(application)
-        lifecycleScope.launch(Dispatchers.IO) {
-            localMovieIds = repository.retrieveMovieIds()
-            localMovieIds
+        createMenu()
+
+        sharedViewModel.nearbyDevices.observe(viewLifecycleOwner) { nearbyDevices ->
+            adapter.items = nearbyDevices.endpoints.toMutableList()
+            if (!nearbyDevices.connectedId.isNullOrBlank()) {
+                // Once connected to a 'Nearby' device proceed to movie selection
+                findNavController().navigate(R.id.action_connectFragment_to_selectionFragment)
+            }
         }
 
         checkPermissions()
@@ -83,20 +71,35 @@ class ConnectFragment : Fragment() {
         return binding.root
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_connect, menu)
+    override fun onStart() {
+        // Clear the old list of found/connected devices and start discovery for new ones
+        sharedViewModel.nearbyDevices.value?.endpoints?.clear()
+        sharedViewModel.nearbyDevices.value?.connectedId = null
+        if (::nearbyClient.isInitialized) scanForDevices()
+
+        super.onStart()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_refresh -> {
-                // TODO Stop then scan for devices again
-                // Update the list of nearby devices or prompt for permissions
-                if (this::connectionsClient.isInitialized) startDiscovery() else checkPermissions()
-                true
+    private fun createMenu() {
+        val menuHost: MenuHost = requireActivity()
+
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_connect, menu)
             }
-            else -> super.onOptionsItemSelected(item)
-        }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_refresh -> {
+                        // TODO keep the connected endpoint in the list
+                        sharedViewModel.nearbyDevices.value?.endpoints = mutableListOf()
+                        if (::nearbyClient.isInitialized) scanForDevices()
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     /** Confirm or request required permissions */
@@ -113,15 +116,18 @@ class ConnectFragment : Fragment() {
                     if (permissionsGranted) scanForDevices() else showPermissionsRationale()
                 }
 
-            requestPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_ADVERTISE,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
+            var permissionArray = arrayOf(
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
             )
+
+            if (Build.VERSION.SDK_INT >= 33)
+                permissionArray += Manifest.permission.NEARBY_WIFI_DEVICES
+
+            requestPermissionLauncher.launch(permissionArray)
         } else {
             scanForDevices()
         }
@@ -152,140 +158,25 @@ class ConnectFragment : Fragment() {
     }
 
     /** Advertise and look for other devices that are advertising */
+    @SuppressLint("MissingPermission")
     private fun scanForDevices() {
-        binding.tvErrorPermissions.visibility = View.INVISIBLE
-        deviceName =
-            (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.name
-        connectionsClient = Nearby.getConnectionsClient(application.applicationContext)
-
-        startAdvertising()
-        startDiscovery()
-    }
-
-    /** Lets other devices know you are available for connection */
-    private fun startAdvertising() {
-        val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
-        connectionsClient.startAdvertising(
-            deviceName,
-            application.packageName,
-            connectionLifecycleCallback,
-            advertisingOptions
-        )
-            .addOnSuccessListener { _: Void? ->
-                // We're advertising!
-            }
-            .addOnFailureListener { e: Exception? ->
-                // We were unable to start advertising.
-            }
-    }
-
-    /** Looks for any devices available for connection */
-    private fun startDiscovery() {
-        val discoveryOptions = DiscoveryOptions.Builder().setStrategy(strategy).build()
-        connectionsClient.startDiscovery(
-            application.packageName,
-            endpointDiscoveryCallback,
-            discoveryOptions
-        )
-            .addOnSuccessListener { _: Void? ->
-            }
-            .addOnFailureListener { e: java.lang.Exception? ->
-                Log.d("ConnectFragment", e.toString())
-            }
-    }
-
-
-    /** Adds or removes found/lost devices from the adapter list */
-    private val endpointDiscoveryCallback: EndpointDiscoveryCallback =
-        object : EndpointDiscoveryCallback() {
-            override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-                adapter.items.add(Endpoint(endpointId, info.endpointName))
-                adapter.notifyItemInserted(adapter.itemCount - 1)
-            }
-
-            override fun onEndpointLost(endpointId: String) {
-                // A previously discovered endpoint has gone away.
-                adapter.removeElement(endpointId)
-            }
-        }
-
-
-    /** Establishes a connection to a remote device and sends of movie data */
-    private val connectionLifecycleCallback: ConnectionLifecycleCallback =
-        object : ConnectionLifecycleCallback() {
-            override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
-                // Automatically accept the connection on both sides.
-                connectionsClient.acceptConnection(endpointId, payloadCallback)
-            }
-
-            override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
-                when (result.status.statusCode) {
-                    ConnectionsStatusCodes.STATUS_OK -> {
-                        // We're connected! Can now start sending and receiving data.
-                        adapter.markAsConnected(endpointId)
-                        connectionsClient.stopDiscovery()
-                        findNavController().navigate(R.id.selectionFragment)
-
-                        // TODO Transfer to Selection Fragment
-//                        val bytesPayload =
-//                            Payload.fromBytes(localMovieIds.joinToString(",").toByteArray())
-//                        connectionsClient.sendPayload(endpointId, bytesPayload)
-
-
-                    }
-                    ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
-                        // The connection was rejected by one or both sides.
-                    }
-                    ConnectionsStatusCodes.STATUS_ERROR -> {
-                        // The connection broke before it was able to be accepted.
-                    }
-                    ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT -> {
-                        // The connection broke before it was able to be accepted.
-                    }
-                    else -> {
-                        // Unknown status code
-                    }
-                }
-            }
-
-            override fun onDisconnected(endpointId: String) {
-                // We've been disconnected from this endpoint. No more data can be sent or received
-                adapter.removeElement(endpointId)
-                startDiscovery()
-            }
-        }
-
-
-    /** Handles received data from a remote device */
-    private val payloadCallback: PayloadCallback = object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            // This always gets the full data of the payload. Will be null if it's not a BYTES
-            // payload. You can check the payload type with payload.getType().
-
-            // TODO Transfer to Selection Fragment
-            val payloadBytes = payload.asBytes()
-
-            if (payloadBytes != null) {
-                remoteMovieIds = payloadBytes.decodeToString().split(",").map { it.toInt() }
-                // TODO Utilize the matched movies
-                val matchedMovies = localMovieIds.intersect(remoteMovieIds.toSet())
-            }
-        }
-
-        override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-            // Bytes payloads are sent as a single chunk, so you'll receive a SUCCESS update immediately
-            // after the call to onPayloadReceived().
+        nearbyClient = sharedViewModel.nearbyClient
+        nearbyClient.apply {
+            deviceName =
+                (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.name
+            startAdvertising()
+            startDiscovery()
         }
     }
+
 
     override fun onStop() {
         super.onStop()
 
-        // Stop resource-heavy discovery and clear up adapter
-        if (this::connectionsClient.isInitialized) {
-            connectionsClient.stopDiscovery()
-            adapter.items.clear()
-            adapter.notifyDataSetChanged()
+        // Stop resource-heavy discovery/advertising
+        if (::nearbyClient.isInitialized) {
+            nearbyClient.connections.stopDiscovery()
+            nearbyClient.connections.stopAdvertising()
         }
     }
 }

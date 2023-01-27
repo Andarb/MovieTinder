@@ -3,13 +3,13 @@ package com.andarb.movietinder.model.repository
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.andarb.movietinder.model.Movie
-import com.andarb.movietinder.model.remote.ApiClient
+import com.andarb.movietinder.model.remote.RetrofitClient
 
 /**
- * Handles paging and remote data requests for movies.
+ * Handles paging and remote data requests for movie details.
  */
 class MoviePagingSource : PagingSource<Int, Movie>() {
-    private val apiClient = ApiClient.create()
+    private val apiClient = RetrofitClient.create()
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
         return try {

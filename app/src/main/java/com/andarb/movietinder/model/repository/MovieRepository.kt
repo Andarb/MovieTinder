@@ -5,16 +5,13 @@ import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.local.MovieDatabase
 
 /**
- * Handles local data requests for movies.
+ * Handles local data requests for movie details.
  */
 class MovieRepository(application: Application) {
     private val movieDao = MovieDatabase.getDatabase(application).movieDao()
 
     /** Retrieve liked/disliked movies from local db */
     fun retrieveMovies(isLiked: Boolean) = movieDao.getMovies(isLiked)
-
-    /** Retrieve IDs of liked movies from local db */
-    fun retrieveMovieIds() = movieDao.getLikedMovieIds()
 
     suspend fun insert(movie: Movie) {
         movieDao.insert(movie)

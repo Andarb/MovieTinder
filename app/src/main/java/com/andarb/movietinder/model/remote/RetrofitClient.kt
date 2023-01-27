@@ -8,18 +8,18 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Connects to The Movie Database (TMDb) using the unique [BuildConfig.API_KEY].
  */
-object ApiClient {
+object RetrofitClient {
 
     private const val BASE_URL = "https://api.themoviedb.org/3/movie/"
 
-    fun create(): ApiService {
+    fun create(): RetrofitService {
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(buildOkHttpClient())
             .build()
 
-        return retrofit.create(ApiService::class.java)
+        return retrofit.create(RetrofitService::class.java)
     }
 
     // OkHttpClient interceptor adds an API key to all queries

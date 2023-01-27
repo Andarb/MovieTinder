@@ -13,10 +13,10 @@ import com.andarb.movietinder.util.notifyChange
 import kotlin.properties.Delegates
 
 /**
- * Binds movie details from a saved db list.
+ * Binds details of matched (between 'Nearby' devices) movies.
  */
-class SavedListAdapter(private val itemClickListener: (Movie, ClickType) -> Unit) :
-    RecyclerView.Adapter<SavedListAdapter.ListViewHolder>() {
+class MatchesAdapter(private val itemClickListener: (Movie, ClickType) -> Unit) :
+    RecyclerView.Adapter<MatchesAdapter.ListViewHolder>() {
 
     var items: List<Movie> by Delegates.observable(emptyList()) { _, oldList, newList ->
         notifyChange(oldList, newList)
