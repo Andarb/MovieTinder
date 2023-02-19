@@ -412,34 +412,26 @@ public class CardStackLayoutManager
                 break;
             case Top:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case TopAndLeft:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case TopAndRight:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case Bottom:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case BottomAndLeft:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case BottomAndRight:
                 view.setScaleX(targetScale);
-                // TODO Should handle ScaleY
                 break;
             case Left:
-                // TODO Should handle ScaleX
                 view.setScaleY(targetScale);
                 break;
             case Right:
-                // TODO Should handle ScaleX
                 view.setScaleY(targetScale);
                 break;
         }
