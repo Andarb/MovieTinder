@@ -22,6 +22,9 @@
     /** Endpoint device ID formatting */
     <string name="formatting_id">[%1$s]</string>
 
+    /** Current device name */
+    <string name="device_name">Device name: %1$s</string>
+
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_button_title">Permissions required</string>
     <string name="dialog_permissions_button_message">This app requires <b>Nearby Devices</b> and
@@ -34,4 +37,5 @@
     <string name="error_insufficient_permissions">Unable to scan for nearby devices\n\nPlease allow the
         necessary permissions in the app Settings</string>
     <string name="error_insufficient_permissions_devicename">MissingPermissionsName</string>
+    <string name="error_bluetooth_not_found">ERROR - Bluetooth Not Found!</string>
 </resources>

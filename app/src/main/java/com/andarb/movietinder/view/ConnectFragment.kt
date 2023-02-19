@@ -93,7 +93,10 @@ class ConnectFragment : Fragment() {
                     R.id.action_refresh -> {
                         // TODO keep the connected endpoint in the list
                         sharedViewModel.nearbyDevices.value?.endpoints = mutableListOf()
-                        if (::nearbyClient.isInitialized) scanForDevices()
+                        if (::nearbyClient.isInitialized) {
+                            nearbyClient.startAdvertising()
+                            nearbyClient.startDiscovery()
+                        }
                         true
                     }
                     else -> false
@@ -162,11 +165,15 @@ class ConnectFragment : Fragment() {
     private fun scanForDevices() {
         nearbyClient = sharedViewModel.nearbyClient
         nearbyClient.apply {
-            deviceName =
+            deviceName = try {
                 (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.name
+            } catch (e: NullPointerException) {
+                getString(R.string.error_bluetooth_not_found)
+            }
             startAdvertising()
             startDiscovery()
         }
+        binding.tvDeviceName.text = getString(R.string.device_name, nearbyClient.deviceName)
     }
 
 
