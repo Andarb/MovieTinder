@@ -28,13 +28,12 @@ import java.util.*
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = MovieRepository(application)
-    val dbMovies: LiveData<List<Movie>> = repository.retrieveMovies(true)
+    val dbMovies: LiveData<List<Movie>> = repository.retrieve()
 
     val selectedMovies: MutableList<Movie> = mutableListOf()
     val remoteMovieIds: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
 
     val nearbyDevices: MutableLiveData<Endpoints> = MutableLiveData(Endpoints(mutableListOf()))
-
     val nearbyClient: NearbyClient = NearbyClient(application, remoteMovieIds, nearbyDevices)
 
     val remoteMovies: Flow<PagingData<Movie>> =
@@ -66,9 +65,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Removes all movies from db */
-    fun clearMovies(isLiked: Boolean) {
-        viewModelScope.launch { repository.deleteList(isLiked) }
+
+    /** Delete selected movies from db */
+    fun deleteMovies(movies: List<Movie>) {
+        viewModelScope.launch { repository.delete(movies) }
     }
 
     /** Send a list of selected movies to a connected 'Nearby' device */
@@ -80,6 +80,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val bytesPayload = Payload.fromBytes(movieIds.joinToString(",").toByteArray())
             nearbyClient.connections.sendPayload(deviceId, bytesPayload)
         }
-
     }
 }

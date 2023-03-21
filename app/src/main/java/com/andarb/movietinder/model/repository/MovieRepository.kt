@@ -10,8 +10,7 @@ import com.andarb.movietinder.model.local.MovieDatabase
 class MovieRepository(application: Application) {
     private val movieDao = MovieDatabase.getDatabase(application).movieDao()
 
-    /** Retrieve liked/disliked movies from local db */
-    fun retrieveMovies(isLiked: Boolean) = movieDao.getMovies(isLiked)
+    fun retrieve() = movieDao.getMovies()
 
     suspend fun insert(movie: Movie) {
         movieDao.insert(movie)
@@ -25,7 +24,7 @@ class MovieRepository(application: Application) {
         movieDao.delete(movie)
     }
 
-    suspend fun deleteList(isLiked: Boolean) {
-        movieDao.deleteList(isLiked)
+    suspend fun delete(movies: List<Movie>) {
+        movieDao.delete(movies)
     }
 }

@@ -143,8 +143,8 @@ class ConnectFragment : Fragment() {
 
         with(builder)
         {
-            setTitle(R.string.dialog_permissions_button_title)
-            setMessage(R.string.dialog_permissions_button_message)
+            setTitle(R.string.dialog_permissions_title)
+            setMessage(R.string.dialog_permissions_message)
             setPositiveButton(
                 R.string.dialog_permissions_button_settings
             ) { _, _ ->
