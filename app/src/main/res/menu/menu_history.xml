@@ -5,4 +5,9 @@
         android:id="@+id/action_clear"
         android:title="@string/action_title_clear"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_filter"
+        android:title="@string/action_title_filter"
+        android:icon="@drawable/outline_filter_list_24"
+        app:showAsAction="ifRoom" />
 </menu>

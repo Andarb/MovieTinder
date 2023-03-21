@@ -6,3 +6,7 @@ package com.andarb.movietinder.util
 enum class ClickType {
     LIKE, DELETE
 }
+
+enum class FilterMovies(val index: Int) {
+    ALL(0), LIKE(1), DISLIKE(2)
+}

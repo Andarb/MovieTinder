@@ -5,12 +5,12 @@ import androidx.room.*
 import com.andarb.movietinder.model.Movie
 
 /**
- * Manages the liked/disliked movies' db table.
+ * Manages the movies' db table.
  */
 @Dao
 interface MovieDao {
-    @Query("SELECT * FROM movie_table WHERE isLiked = :isLiked ORDER BY modifiedAt DESC")
-    fun getMovies(isLiked: Boolean): LiveData<List<Movie>>
+    @Query("SELECT * FROM movie_table ORDER BY modifiedAt DESC")
+    fun getMovies(): LiveData<List<Movie>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(movie: Movie)
@@ -21,6 +21,6 @@ interface MovieDao {
     @Delete
     suspend fun delete(movie: Movie)
 
-    @Query("DELETE FROM movie_table WHERE isLiked = :isLiked")
-    suspend fun deleteList(isLiked: Boolean)
+    @Delete
+    suspend fun delete(movies: List<Movie>)
 }
