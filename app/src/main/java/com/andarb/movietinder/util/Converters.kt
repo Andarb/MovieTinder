@@ -1,19 +1,19 @@
 package com.andarb.movietinder.util
 
 import androidx.room.TypeConverter
-import java.util.*
+import java.time.LocalDate
 
 /**
  * Allows storing and retrieving date value from local db.
  */
 class Converters {
     @TypeConverter
-    fun fromTimestamp(value: Long?): Date? {
-        return value?.let { Date(it) }
+    fun fromTimestamp(value: Long?): LocalDate? {
+        return value?.let { LocalDate.ofEpochDay(it) }
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date?): Long? {
-        return date?.time
+    fun dateToTimestamp(date: LocalDate?): Long? {
+        return date?.toEpochDay()
     }
 }

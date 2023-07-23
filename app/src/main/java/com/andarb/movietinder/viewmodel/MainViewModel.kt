@@ -18,7 +18,7 @@ import com.andarb.movietinder.util.ClickType
 import com.google.android.gms.nearby.connection.Payload
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import java.util.*
+import java.time.LocalDate
 
 /**
  * Shared ViewModel for fragments.
@@ -47,7 +47,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             when (clickType) {
                 ClickType.LIKE -> {
                     movie.isLiked = !(movie.isLiked)
-                    movie.modifiedAt = Date()
+                    movie.modifiedAt = LocalDate.now()
                     repository.update(movie)
                 }
                 ClickType.DELETE -> repository.delete(movie)
@@ -59,7 +59,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun saveMovie(movie: Movie?, isLiked: Boolean) {
         movie?.let {
             it.isLiked = isLiked
-            it.modifiedAt = Date()
+            it.modifiedAt = LocalDate.now()
             if (isLiked) selectedMovies.add(movie)
             viewModelScope.launch { repository.insert(it) }
         }

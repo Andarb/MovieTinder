@@ -17,8 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-private const val POSTER_BASE_URL = "https://image.tmdb.org/t/p/"
-private const val POSTER_SIZE = "w500" // applicable sizes "w92", "w154", "w185", "w342" and "w780"
+const val POSTER_URL = "https://image.tmdb.org/t/p/w500"
 
 /** Allows different classes to use same Diffutil functionality as long as they have an [id] field */
 interface DiffutilComparison {
@@ -29,7 +28,7 @@ interface DiffutilComparison {
 fun ImageView.download(imagePath: String?, fileId: Int) {
     val imageView = this
 
-    Glide.with(imageView).asBitmap().load(POSTER_BASE_URL + POSTER_SIZE + imagePath)
+    Glide.with(imageView).asBitmap().load(POSTER_URL + imagePath)
         .into(object : CustomTarget<Bitmap>() {
             override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                 imageView.setImageBitmap(resource)
