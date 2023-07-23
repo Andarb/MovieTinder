@@ -2,19 +2,28 @@ package com.andarb.movietinder.view
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
-import com.andarb.movietinder.databinding.FragmentHistoryBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.util.FilterMovies
-import com.andarb.movietinder.view.adapters.HistoryAdapter
+import com.andarb.movietinder.view.composables.HistoryContent
 import com.andarb.movietinder.viewmodel.MainViewModel
 
 /**
@@ -23,25 +32,38 @@ import com.andarb.movietinder.viewmodel.MainViewModel
 class HistoryFragment : Fragment() {
 
     private val sharedViewModel: MainViewModel by activityViewModels()
-    private var selectedFilterChoice = FilterMovies.ALL.index
-    private val adapter = HistoryAdapter { movie: Movie, clickType: ClickType ->
-        sharedViewModel.onClick(movie, clickType)
-    }
+    private lateinit var selectedFilter: MutableState<Int>
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentHistoryBinding.inflate(inflater, container, false)
         createMenu()
 
-        binding.recyclerviewMovies.adapter = adapter
-        binding.recyclerviewMovies.layoutManager = LinearLayoutManager(context)
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
-        sharedViewModel.dbMovies.observe(viewLifecycleOwner) { updateAdapter() }
+            setContent {
+                val movies = sharedViewModel.dbMovies.observeAsState(initial = emptyList())
+                selectedFilter = remember { mutableStateOf(FilterMovies.ALL.index) }
 
-        return binding.root
+                // Filter preference, then group and sort movies by date last interacted
+                val filteredMovies = filterMovies(movies.value)
+                val sortedMovies =
+                    (filteredMovies.groupBy { it.modifiedAt }).toSortedMap(Comparator.reverseOrder())
+
+                val clickListener: (Movie, ClickType) -> Unit =
+                    { movie: Movie, clickType: ClickType ->
+                        sharedViewModel.onClick(
+                            movie,
+                            clickType
+                        )
+                    }
+
+                HistoryContent(sortedMovies, clickListener, resources)
+            }
+        }
     }
 
     private fun createMenu() {
@@ -55,17 +77,30 @@ class HistoryFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_clear -> {
-                        sharedViewModel.deleteMovies(adapter.items)
+                        sharedViewModel.apply { deleteMovies(filterMovies(dbMovies.value)) }
                         true
                     }
+
                     R.id.action_filter -> {
                         showFilterDialog()
                         true
                     }
+
                     else -> false
                 }
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    /**  Return a chosen filtered movie list */
+    private fun filterMovies(unfiltered: List<Movie>?): List<Movie> {
+        return unfiltered.let { movies ->
+            when (FilterMovies.values()[selectedFilter.value]) {
+                FilterMovies.ALL -> movies
+                FilterMovies.LIKE -> movies?.filter { it.isLiked }
+                FilterMovies.DISLIKE -> movies?.filter { !(it.isLiked) }
+            }
+        } ?: emptyList()
     }
 
     /**  Display a dialogue window with radio buttons for filtering a list of movies */
@@ -74,22 +109,10 @@ class HistoryFragment : Fragment() {
 
         AlertDialog.Builder(activity)
             .setTitle(getString(R.string.dialog_filter_title))
-            .setSingleChoiceItems(choices, selectedFilterChoice) { dialog, which ->
-                selectedFilterChoice = which
-                updateAdapter()
+            .setSingleChoiceItems(choices, selectedFilter.value) { dialog, which ->
+                selectedFilter.value = which
                 dialog.dismiss()
             }
             .show()
-    }
-
-    /**  Update recyclerview adapter based on the chosen filter */
-    private fun updateAdapter() {
-        when (FilterMovies.values()[selectedFilterChoice]) {
-            FilterMovies.ALL -> adapter.items = sharedViewModel.dbMovies.value ?: emptyList()
-            FilterMovies.LIKE -> adapter.items =
-                sharedViewModel.dbMovies.value?.filter { it.isLiked } ?: emptyList()
-            FilterMovies.DISLIKE -> adapter.items =
-                sharedViewModel.dbMovies.value?.filter { !(it.isLiked) } ?: emptyList()
-        }
     }
 }
