@@ -25,6 +25,7 @@ import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.util.FilterMovies
 import com.andarb.movietinder.view.composables.HistoryContent
 import com.andarb.movietinder.viewmodel.MainViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Displays a list of previously browsed movies.
@@ -77,7 +78,7 @@ class HistoryFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_clear -> {
-                        sharedViewModel.apply { deleteMovies(filterMovies(dbMovies.value)) }
+                        showClearDialog()
                         true
                     }
 
@@ -114,5 +115,19 @@ class HistoryFragment : Fragment() {
                 dialog.dismiss()
             }
             .show()
+    }
+
+    /**  Display a dialogue window to confirm erasure of selected movies from history */
+    private fun showClearDialog() {
+        MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
+            .setTitle(R.string.dialog_erase_history_confirm)
+            .setMessage(R.string.dialog_erase_history)
+            .setPositiveButton(R.string.dialog_erase_history_yes, { dialog, id ->
+                sharedViewModel.apply { deleteMovies(filterMovies(dbMovies.value)) }
+                dialog.dismiss()
+            })
+            .setNegativeButton(R.string.dialog_erase_history_no, { dialog, id ->
+                dialog.dismiss()
+            }).show()
     }
 }
