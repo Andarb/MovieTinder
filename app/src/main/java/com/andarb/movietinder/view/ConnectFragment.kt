@@ -10,20 +10,25 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.*
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.remote.NearbyClient
+import com.andarb.movietinder.model.repository.UserPreferences
 import com.andarb.movietinder.view.adapters.EndpointAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
+
 
 /**
  * Using 'Nearby API' advertises availability for connection.
@@ -35,6 +40,7 @@ class ConnectFragment : Fragment() {
     private lateinit var binding: FragmentConnectBinding
     private lateinit var application: Application
     private lateinit var adapter: EndpointAdapter
+    private var userHint: String = ""
     private val sharedViewModel: MainViewModel by activityViewModels()
     private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
         nearbyClient.connect(endpoint.id)
@@ -42,9 +48,7 @@ class ConnectFragment : Fragment() {
 
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         application = requireActivity().application
         binding = FragmentConnectBinding.inflate(inflater, container, false)
@@ -53,6 +57,7 @@ class ConnectFragment : Fragment() {
         binding.tvErrorPermissions.visibility = View.INVISIBLE
         binding.recyclerviewConnect.layoutManager = LinearLayoutManager(context)
         binding.recyclerviewConnect.adapter = adapter
+        binding.tvDeviceName.setOnClickListener { changeDeviceName() }
 
         createMenu()
 
@@ -69,6 +74,91 @@ class ConnectFragment : Fragment() {
         return binding.root
     }
 
+
+    /** Confirm or request required permissions */
+    private fun checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Request necessary runtime permissions
+            val requestPermissionLauncher = registerForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                // Confirm all permissions were granted
+                val permissionsGranted = !permissions.values.contains(false)
+
+                if (permissionsGranted) scanForDevices() else showPermissionsRationale()
+            }
+
+            var permissionArray = arrayOf(
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+
+            if (Build.VERSION.SDK_INT >= 33) permissionArray += Manifest.permission.NEARBY_WIFI_DEVICES
+
+            requestPermissionLauncher.launch(permissionArray)
+        } else {
+            scanForDevices()
+        }
+    }
+
+    /** Show the reason for requiring requested permissions */
+    private fun showPermissionsRationale() {
+        binding.tvErrorPermissions.visibility = View.VISIBLE
+
+        AlertDialog.Builder(activity).setTitle(R.string.dialog_permissions_title)
+            .setMessage(R.string.dialog_permissions_message).setPositiveButton(
+                R.string.dialog_permissions_button_settings
+            ) { _, _ ->
+                val intent = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", application.packageName, null)
+                )
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            }.setNegativeButton(R.string.dialog_cancel, null).show()
+    }
+
+    /** Advertise and look for other devices that are advertising */
+    @SuppressLint("MissingPermission")
+    private fun scanForDevices() {
+        nearbyClient = sharedViewModel.nearbyClient
+
+        lifecycleScope.launch {
+            sharedViewModel.userPreferencesFlow.collect { preferences: UserPreferences ->
+                nearbyClient.apply {
+                    deviceName = preferences.deviceName
+                    connections.stopAdvertising()
+                    startAdvertising()
+                }
+
+                binding.tvDeviceName.text = nearbyClient.deviceName
+                userHint = nearbyClient.deviceName
+            }
+        }
+
+        nearbyClient.startDiscovery()
+    }
+
+    // Prompts to change the name of this device as seen by others
+    private fun changeDeviceName() {
+        val userInput = EditText(activity)
+        userInput.hint = userHint
+
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.dialog_device_name_title)
+            .setView(userInput)
+            .setPositiveButton(R.string.dialog_confirm) { dialog, whichButton ->
+                val name = userInput.text.toString()
+                binding.tvDeviceName.text = name
+                sharedViewModel.setDeviceName(name)
+            }
+            .setNegativeButton(R.string.dialog_cancel) { dialog, whichButton -> }
+            .show()
+    }
+
     override fun onStart() {
         // Clear the old list of found/connected devices and start discovery for new ones
         sharedViewModel.nearbyDevices.value?.endpoints?.clear()
@@ -76,6 +166,16 @@ class ConnectFragment : Fragment() {
         if (::nearbyClient.isInitialized) scanForDevices()
 
         super.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        // Stop resource-heavy discovery/advertising
+        if (::nearbyClient.isInitialized) {
+            nearbyClient.connections.stopDiscovery()
+            nearbyClient.connections.stopAdvertising()
+        }
     }
 
     private fun createMenu() {
@@ -97,87 +197,10 @@ class ConnectFragment : Fragment() {
                         }
                         true
                     }
+
                     else -> false
                 }
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
-    }
-
-    /** Confirm or request required permissions */
-    private fun checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Request necessary runtime permissions
-            val requestPermissionLauncher =
-                registerForActivityResult(
-                    ActivityResultContracts.RequestMultiplePermissions()
-                ) { permissions ->
-                    // Confirm all permissions were granted
-                    val permissionsGranted = !permissions.values.contains(false)
-
-                    if (permissionsGranted) scanForDevices() else showPermissionsRationale()
-                }
-
-            var permissionArray = arrayOf(
-                Manifest.permission.BLUETOOTH_ADVERTISE,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-
-            if (Build.VERSION.SDK_INT >= 33)
-                permissionArray += Manifest.permission.NEARBY_WIFI_DEVICES
-
-            requestPermissionLauncher.launch(permissionArray)
-        } else {
-            scanForDevices()
-        }
-    }
-
-    /** Show the reason for requiring requested permissions */
-    private fun showPermissionsRationale() {
-        binding.tvErrorPermissions.visibility = View.VISIBLE
-        val builder = AlertDialog.Builder(activity)
-
-        with(builder)
-        {
-            setTitle(R.string.dialog_permissions_title)
-            setMessage(R.string.dialog_permissions_message)
-            setPositiveButton(
-                R.string.dialog_permissions_button_settings
-            ) { _, _ ->
-                val intent = Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", application.packageName, null)
-                )
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            }
-            setNegativeButton(R.string.dialog_permissions_button_cancel, null)
-            show()
-        }
-    }
-
-    /** Advertise and look for other devices that are advertising */
-    @SuppressLint("MissingPermission")
-    private fun scanForDevices() {
-        nearbyClient = sharedViewModel.nearbyClient
-        nearbyClient.apply {
-            deviceName = "SetName"
-            startAdvertising()
-            startDiscovery()
-        }
-        binding.tvDeviceName.text = getString(R.string.device_name, nearbyClient.deviceName)
-    }
-
-
-    override fun onStop() {
-        super.onStop()
-
-        // Stop resource-heavy discovery/advertising
-        if (::nearbyClient.isInitialized) {
-            nearbyClient.connections.stopDiscovery()
-            nearbyClient.connections.stopAdvertising()
-        }
     }
 }
