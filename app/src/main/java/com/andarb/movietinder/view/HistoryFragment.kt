@@ -120,14 +120,14 @@ class HistoryFragment : Fragment() {
     /**  Display a dialogue window to confirm erasure of selected movies from history */
     private fun showClearDialog() {
         MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
-            .setTitle(R.string.dialog_erase_history_confirm)
+            .setTitle(R.string.dialog_confirm)
             .setMessage(R.string.dialog_erase_history)
-            .setPositiveButton(R.string.dialog_erase_history_yes, { dialog, id ->
+            .setPositiveButton(R.string.dialog_erase_history_yes) { dialog, id ->
                 sharedViewModel.apply { deleteMovies(filterMovies(dbMovies.value)) }
                 dialog.dismiss()
-            })
-            .setNegativeButton(R.string.dialog_erase_history_no, { dialog, id ->
+            }
+            .setNegativeButton(R.string.dialog_cancel) { dialog, id ->
                 dialog.dismiss()
-            }).show()
+            }.show()
     }
 }

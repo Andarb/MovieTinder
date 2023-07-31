@@ -5,6 +5,7 @@
     <string name="description_poster">Movie poster</string>
     <string name="description_like">Like/Dislike</string>
     <string name="description_delete">Delete</string>
+    <string name="description_name">Change device name</string>
 
     /** App top bar menu */
     <string name="action_title_connect">Connect</string>
@@ -22,21 +23,19 @@
     /** Endpoint device ID formatting */
     <string name="formatting_id">[%1$s]</string>
 
-    /** Current device name */
-    <string name="device_name">Device name: %1$s</string>
+    /** Device name */
+    <string name="default_device_name">MovieBuff</string>
+    <string name="dialog_device_name_title">Name your device:</string>
 
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_title">Permissions required</string>
     <string name="dialog_permissions_message">This app requires <b>Nearby Devices</b> and
         <b>Location</b> permissions to be able to find and communicate with nearby devices. Please
         open the app <b>Settings</b> to enable the necessary permissions.</string>
-    <string name="dialog_permissions_button_cancel">Cancel</string>
     <string name="dialog_permissions_button_settings">Settings</string>
 
     /** Dialog box for filtering movies in HistoryFragment */
     <string name="dialog_filter_title">Display movies:</string>
-    <string name="dialog_filter_button_ok">OK</string>
-    <string name="dialog_filter_button_cancel">Cancel</string>
     <string-array name="dialog_filter_choices">
         <item>All</item>
         <item>Liked</item>
@@ -45,9 +44,11 @@
 
     /** Dialog box for clearing movies in HistoryFragment */
     <string name="dialog_erase_history">Are you sure you wanted to erase all the movies listed below from history?</string>
-    <string name="dialog_erase_history_confirm">Confirm</string>
     <string name="dialog_erase_history_yes">Delete</string>
-    <string name="dialog_erase_history_no">Cancel</string>
+
+    /** Dialog box general */
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_confirm">Confirm</string>
 
     /** User displayed error messages */
     <string name="error_insufficient_permissions">Unable to scan for nearby devices\n\nPlease allow the

@@ -1,6 +1,8 @@
 package com.andarb.movietinder.viewmodel
 
 import android.app.Application
+import android.content.Context
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,11 +16,17 @@ import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.remote.NearbyClient
 import com.andarb.movietinder.model.repository.MoviePagingSource
 import com.andarb.movietinder.model.repository.MovieRepository
+import com.andarb.movietinder.model.repository.PreferencesRepository
 import com.andarb.movietinder.util.ClickType
 import com.google.android.gms.nearby.connection.Payload
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+
+private const val USER_PREFERENCES_NAME = "user_preferences"
+private val Context.dataStore by preferencesDataStore(
+    name = USER_PREFERENCES_NAME
+)
 
 /**
  * Shared ViewModel for fragments.
@@ -27,8 +35,12 @@ import java.time.LocalDate
  * Sends off selected movie to a connected 'Nearby' device
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = MovieRepository(application)
-    val dbMovies: LiveData<List<Movie>> = repository.retrieve()
+    private val preferencesRepository =
+        PreferencesRepository(dataStore = application.dataStore, context = application)
+    val userPreferencesFlow = preferencesRepository.preferencesFlow
+
+    private val movieRepository = MovieRepository(application)
+    val dbMovies: LiveData<List<Movie>> = movieRepository.retrieve()
 
     val selectedMovies: MutableList<Movie> = mutableListOf()
     val remoteMovieIds: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
@@ -48,9 +60,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ClickType.LIKE -> {
                     movie.isLiked = !(movie.isLiked)
                     movie.modifiedAt = LocalDate.now()
-                    repository.update(movie)
+                    movieRepository.update(movie)
                 }
-                ClickType.DELETE -> repository.delete(movie)
+
+                ClickType.DELETE -> movieRepository.delete(movie)
             }
         }
     }
@@ -61,14 +74,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.isLiked = isLiked
             it.modifiedAt = LocalDate.now()
             if (isLiked) selectedMovies.add(movie)
-            viewModelScope.launch { repository.insert(it) }
+            viewModelScope.launch { movieRepository.insert(it) }
         }
     }
 
 
     /** Delete selected movies from db */
     fun deleteMovies(movies: List<Movie>) {
-        viewModelScope.launch { repository.delete(movies) }
+        viewModelScope.launch { movieRepository.delete(movies) }
     }
 
     /** Send a list of selected movies to a connected 'Nearby' device */
@@ -79,6 +92,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (deviceId != null) {
             val bytesPayload = Payload.fromBytes(movieIds.joinToString(",").toByteArray())
             nearbyClient.connections.sendPayload(deviceId, bytesPayload)
+        }
+    }
+
+
+    // Save device name in the preferences
+    fun setDeviceName(name: String) {
+        viewModelScope.launch {
+            preferencesRepository.updateDeviceName(name)
+        }
+    }
+
+    // Save number of movies to browse in preferences
+    fun setMovieCount(count: Int) {
+        viewModelScope.launch {
+            preferencesRepository.updateMovieCount(count)
         }
     }
 }
