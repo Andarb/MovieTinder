@@ -93,10 +93,10 @@ class HistoryFragment : Fragment() {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
-    /**  Return a chosen filtered movie list */
+    /**  Return a chosen, filtered movie list */
     private fun filterMovies(unfiltered: List<Movie>?): List<Movie> {
         return unfiltered.let { movies ->
-            when (FilterMovies.values()[selectedFilter.value]) {
+            when (FilterMovies.entries[selectedFilter.value]) {
                 FilterMovies.ALL -> movies
                 FilterMovies.LIKE -> movies?.filter { it.isLiked }
                 FilterMovies.DISLIKE -> movies?.filter { !(it.isLiked) }

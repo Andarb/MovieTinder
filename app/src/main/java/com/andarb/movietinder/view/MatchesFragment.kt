@@ -33,9 +33,9 @@ class MatchesFragment : Fragment() {
         binding.recyclerviewMatches.adapter = adapter
         binding.recyclerviewMatches.layoutManager = LinearLayoutManager(context)
 
-        sharedViewModel.remoteMovieIds.observe(viewLifecycleOwner) { remoteIds ->
+        sharedViewModel.nearbyMovieIds.observe(viewLifecycleOwner) { ids ->
             val localIds = sharedViewModel.selectedMovies.map { it.id }
-            val matchedIds: List<Int> = localIds.intersect(remoteIds.toSet()).toList()
+            val matchedIds: List<Int> = localIds.intersect(ids.toSet()).toList()
             val localMovies: List<Movie> = sharedViewModel.selectedMovies
 
             val matchedMovies: List<Movie> =
@@ -46,7 +46,7 @@ class MatchesFragment : Fragment() {
             adapter.items = matchedMovies
         }
 
-        sharedViewModel.sendMoviesPayload()
+        sharedViewModel.sendMatchedMovies()
 
         return binding.root
     }

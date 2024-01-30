@@ -15,8 +15,9 @@ import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
 import com.yuyakaido.android.cardstackview.CardStackListener
 import com.yuyakaido.android.cardstackview.Direction
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
+const val DEFAULT_MOVIE_COUNT: Int = 10
 
 /**
  * Presents a selection of movies for the user to choose from.
@@ -26,6 +27,7 @@ class SelectionFragment : Fragment(), CardStackListener {
     private lateinit var binding: FragmentSelectionBinding
     private val adapter = MovieCardAdapter()
     private val sharedViewModel: MainViewModel by activityViewModels()
+    private var movieCountPref = DEFAULT_MOVIE_COUNT
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,7 +40,22 @@ class SelectionFragment : Fragment(), CardStackListener {
         binding.cardstackMovies.adapter = adapter
 
         lifecycleScope.launch {
-            sharedViewModel.remoteMovies.collectLatest { adapter.submitData(it) }
+            sharedViewModel.userPreferencesFlow.collect { movieCountPref = it.movieCount }
+        }
+        lifecycleScope.launch {
+            sharedViewModel.apply {
+                if (nearbyClient.isHost) {
+                    remoteMovies().observe(viewLifecycleOwner) {
+                        val trimmedList = it.movies.subList(0, movieCountPref)
+                        sendMovieSelection(trimmedList)
+                        adapter.items = trimmedList
+                    }
+                } else {
+                    nearbyMovies.observe(viewLifecycleOwner) {
+                        adapter.items = it
+                    }
+                }
+            }
         }
 
         return binding.root
@@ -46,13 +63,14 @@ class SelectionFragment : Fragment(), CardStackListener {
 
     /** Saves user selection on swipe */
     override fun onCardSwiped(direction: Direction?, swipedPosition: Int) {
-        val movie = adapter.peek(swipedPosition)
+        val movie = adapter.items[swipedPosition]
         val isLiked = direction == Direction.Right
+        val finalPosition = adapter.itemCount - 1
 
         sharedViewModel.saveMovie(movie, isLiked)
 
-        // Proceed to results screen after reaching the end of list
-        if (swipedPosition == 4 && findNavController().currentDestination?.id == R.id.selectionFragmentNav) { // TODO set sharedpreference
+        // Proceed to results screen after reaching the limit
+        if (swipedPosition == finalPosition && findNavController().currentDestination?.id == R.id.selectionFragmentNav) {
             findNavController().navigate(R.id.action_selectionFragment_to_matchesFragment)
         }
     }

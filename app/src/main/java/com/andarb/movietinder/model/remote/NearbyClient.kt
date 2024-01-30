@@ -5,23 +5,38 @@ import androidx.lifecycle.MutableLiveData
 import com.andarb.movietinder.R
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.Endpoints
+import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.addElement
 import com.andarb.movietinder.util.markConnected
 import com.andarb.movietinder.util.removeElement
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.connection.*
+import com.google.android.gms.nearby.connection.AdvertisingOptions
+import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
+import com.google.android.gms.nearby.connection.ConnectionResolution
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
+import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.google.android.gms.nearby.connection.DiscoveryOptions
+import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.PayloadCallback
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.google.android.gms.nearby.connection.Strategy
+import kotlinx.serialization.json.Json
 
 /**
  * Handles advertising, discovery and connecting between 'Nearby' devices.
  */
 class NearbyClient(
     private val application: Application,
-    private val remoteMovieIds: MutableLiveData<List<Int>>,
+    private val nearbyMovieIds: MutableLiveData<List<Int>>,
+    private val nearbyMovies: MutableLiveData<List<Movie>>,
     private var endpoints: MutableLiveData<Endpoints>
 ) {
     private val strategy = Strategy.P2P_POINT_TO_POINT
     val connections = Nearby.getConnectionsClient(application.applicationContext)
     var deviceName = application.getString(R.string.error_insufficient_permissions_devicename)
+    var isHost: Boolean = false
 
 
     /** Establishes a connection to an endpoint */
@@ -87,6 +102,7 @@ class NearbyClient(
         object : ConnectionLifecycleCallback() {
             override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
                 // Automatically accept the connection on both sides.
+                isHost = !(connectionInfo.isIncomingConnection)
                 connections.acceptConnection(endpointId, payloadCallback)
             }
 
@@ -129,7 +145,11 @@ class NearbyClient(
             val payloadBytes = payload.asBytes()
 
             if (payloadBytes != null) {
-                remoteMovieIds.value = payloadBytes.decodeToString().split(",").map { it.toInt() }
+                val stringPayload: String = payloadBytes.decodeToString()
+
+                if (stringPayload[0] == 'i') nearbyMovieIds.value =
+                    stringPayload.substring(1).split(",").map { it.toInt() }
+                else nearbyMovies.value = Json.decodeFromString(stringPayload.substring(1))
             }
         }
 
