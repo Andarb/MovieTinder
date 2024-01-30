@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.*
 import android.widget.EditText
+import android.widget.NumberPicker
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -40,7 +41,8 @@ class ConnectFragment : Fragment() {
     private lateinit var binding: FragmentConnectBinding
     private lateinit var application: Application
     private lateinit var adapter: EndpointAdapter
-    private var userHint: String = ""
+    private var deviceNameHint: String = ""
+    private var movieCountHint: Int = 0
     private val sharedViewModel: MainViewModel by activityViewModels()
     private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
         nearbyClient.connect(endpoint.id)
@@ -58,6 +60,7 @@ class ConnectFragment : Fragment() {
         binding.recyclerviewConnect.layoutManager = LinearLayoutManager(context)
         binding.recyclerviewConnect.adapter = adapter
         binding.tvDeviceName.setOnClickListener { changeDeviceName() }
+        binding.tvMovieCount.setOnClickListener { changeMovieCount() }
 
         createMenu()
 
@@ -135,7 +138,10 @@ class ConnectFragment : Fragment() {
                 }
 
                 binding.tvDeviceName.text = nearbyClient.deviceName
-                userHint = nearbyClient.deviceName
+                deviceNameHint = nearbyClient.deviceName
+
+                movieCountHint = preferences.movieCount
+                binding.tvMovieCount.text = movieCountHint.toString()
             }
         }
 
@@ -145,7 +151,7 @@ class ConnectFragment : Fragment() {
     // Prompts to change the name of this device as seen by others
     private fun changeDeviceName() {
         val userInput = EditText(activity)
-        userInput.hint = userHint
+        userInput.hint = deviceNameHint
 
         AlertDialog.Builder(activity)
             .setTitle(R.string.dialog_device_name_title)
@@ -154,6 +160,28 @@ class ConnectFragment : Fragment() {
                 val name = userInput.text.toString()
                 binding.tvDeviceName.text = name
                 sharedViewModel.setDeviceName(name)
+            }
+            .setNegativeButton(R.string.dialog_cancel) { dialog, whichButton -> }
+            .show()
+    }
+
+    // Prompts to change the number of movies to choose from
+    private fun changeMovieCount() {
+        val userInput = NumberPicker(activity)
+        userInput.apply {
+            wrapSelectorWheel = true
+            minValue = 2
+            maxValue = 20
+            value = movieCountHint
+        }
+
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.dialog_movie_count_title)
+            .setView(userInput)
+            .setPositiveButton(R.string.dialog_confirm) { dialog, whichButton ->
+                val count = userInput.value
+                binding.tvMovieCount.text = count.toString()
+                sharedViewModel.setMovieCount(count)
             }
             .setNegativeButton(R.string.dialog_cancel) { dialog, whichButton -> }
             .show()
@@ -189,7 +217,6 @@ class ConnectFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_refresh -> {
-                        // TODO keep the connected endpoint in the list
                         sharedViewModel.nearbyDevices.value?.endpoints = mutableListOf()
                         if (::nearbyClient.isInitialized) {
                             nearbyClient.startAdvertising()

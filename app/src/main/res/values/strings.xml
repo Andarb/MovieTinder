@@ -6,6 +6,7 @@
     <string name="description_like">Like/Dislike</string>
     <string name="description_delete">Delete</string>
     <string name="description_name">Change device name</string>
+    <string name="description_count">Change movie count</string>
 
     /** App top bar menu */
     <string name="action_title_connect">Connect</string>
@@ -26,6 +27,11 @@
     /** Device name */
     <string name="default_device_name">MovieBuff</string>
     <string name="dialog_device_name_title">Name your device:</string>
+
+    /** Movie count */
+    <string name="default_movie_count">5</string>
+    <string name="movie_count_title">Movie Count:</string>
+    <string name="dialog_movie_count_title">Number of movies to select from:</string>
 
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_title">Permissions required</string>
