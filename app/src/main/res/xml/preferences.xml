@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        app:iconSpaceReserved="false"
+        app:key="@string/preferences_device_name_key"
+        app:title="@string/preferences_device_name_title"
+        app:useSimpleSummaryProvider="true" />
+
+    <SeekBarPreference
+        android:max="20"
+        android:summary="@string/preferences_movie_count_summary"
+        app:defaultValue="@string/preferences_default_movie_count"
+        app:iconSpaceReserved="false"
+        app:key="@string/preferences_movie_count_key"
+        app:min="2"
+        app:showSeekBarValue="true"
+        app:title="@string/preferences_movie_count_title" />
+
+</PreferenceScreen>

@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.preference.PreferenceManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentSelectionBinding
 import com.andarb.movietinder.view.adapters.MovieCardAdapter
@@ -15,9 +15,7 @@ import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
 import com.yuyakaido.android.cardstackview.CardStackListener
 import com.yuyakaido.android.cardstackview.Direction
-import kotlinx.coroutines.launch
 
-const val DEFAULT_MOVIE_COUNT: Int = 10
 
 /**
  * Presents a selection of movies for the user to choose from.
@@ -27,7 +25,6 @@ class SelectionFragment : Fragment(), CardStackListener {
     private lateinit var binding: FragmentSelectionBinding
     private val adapter = MovieCardAdapter()
     private val sharedViewModel: MainViewModel by activityViewModels()
-    private var movieCountPref = DEFAULT_MOVIE_COUNT
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,21 +36,22 @@ class SelectionFragment : Fragment(), CardStackListener {
         binding.cardstackMovies.layoutManager = layoutManager
         binding.cardstackMovies.adapter = adapter
 
-        lifecycleScope.launch {
-            sharedViewModel.userPreferencesFlow.collect { movieCountPref = it.movieCount }
-        }
-        lifecycleScope.launch {
-            sharedViewModel.apply {
-                if (nearbyClient.isHost) {
-                    remoteMovies().observe(viewLifecycleOwner) {
-                        val trimmedList = it.movies.subList(0, movieCountPref)
-                        sendMovieSelection(trimmedList)
-                        adapter.items = trimmedList
-                    }
-                } else {
-                    nearbyMovies.observe(viewLifecycleOwner) {
-                        adapter.items = it
-                    }
+        val preferences = PreferenceManager.getDefaultSharedPreferences(requireActivity())
+        val movieCountPref = preferences.getInt(
+            getString(R.string.preferences_movie_count_key),
+            getString(R.string.preferences_default_movie_count).toInt()
+        )
+
+        sharedViewModel.apply {
+            if (nearbyClient.isHost) {
+                remoteMovies().observe(viewLifecycleOwner) {
+                    val trimmedList = it.movies.subList(0, movieCountPref)
+                    sendMovieSelection(trimmedList)
+                    adapter.items = trimmedList
+                }
+            } else {
+                nearbyMovies.observe(viewLifecycleOwner) {
+                    adapter.items = it
                 }
             }
         }
