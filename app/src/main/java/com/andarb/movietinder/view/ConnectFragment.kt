@@ -5,30 +5,28 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Application
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.*
-import android.widget.EditText
-import android.widget.NumberPicker
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.remote.NearbyClient
-import com.andarb.movietinder.model.repository.UserPreferences
 import com.andarb.movietinder.view.adapters.EndpointAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 
 /**
@@ -41,8 +39,7 @@ class ConnectFragment : Fragment() {
     private lateinit var binding: FragmentConnectBinding
     private lateinit var application: Application
     private lateinit var adapter: EndpointAdapter
-    private var deviceNameHint: String = ""
-    private var movieCountHint: Int = 0
+    private lateinit var preferences: SharedPreferences
     private val sharedViewModel: MainViewModel by activityViewModels()
     private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
         nearbyClient.connect(endpoint.id)
@@ -53,14 +50,14 @@ class ConnectFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         application = requireActivity().application
+        preferences = PreferenceManager.getDefaultSharedPreferences(application)
         binding = FragmentConnectBinding.inflate(inflater, container, false)
 
         adapter = EndpointAdapter(endpointClickListener)
         binding.tvErrorPermissions.visibility = View.INVISIBLE
         binding.recyclerviewConnect.layoutManager = LinearLayoutManager(context)
         binding.recyclerviewConnect.adapter = adapter
-        binding.tvDeviceName.setOnClickListener { changeDeviceName() }
-        binding.tvMovieCount.setOnClickListener { changeMovieCount() }
+        binding.tvDeviceName.setOnClickListener { findNavController().navigate(R.id.action_connectFragmentNav_to_settingsFragmentNav) }
 
         createMenu()
 
@@ -129,68 +126,44 @@ class ConnectFragment : Fragment() {
     private fun scanForDevices() {
         nearbyClient = sharedViewModel.nearbyClient
 
-        lifecycleScope.launch {
-            sharedViewModel.userPreferencesFlow.collect { preferences: UserPreferences ->
-                nearbyClient.apply {
-                    deviceName = preferences.deviceName
-                    connections.stopAdvertising()
-                    startAdvertising()
-                }
-
-                binding.tvDeviceName.text = nearbyClient.deviceName
-                deviceNameHint = nearbyClient.deviceName
-
-                movieCountHint = preferences.movieCount
-                binding.tvMovieCount.text = movieCountHint.toString()
-            }
+        nearbyClient.apply {
+            deviceName = preferences.getString(
+                getString(R.string.preferences_device_name_key),
+                getString(R.string.default_device_name) + Random.nextInt(100, 999).toString()
+            ).toString()
+            connections.stopAdvertising()
+            startAdvertising()
         }
+        binding.tvDeviceName.text = nearbyClient.deviceName
 
         nearbyClient.startDiscovery()
     }
 
-    // Prompts to change the name of this device as seen by others
-    private fun changeDeviceName() {
-        val userInput = EditText(activity)
-        userInput.hint = deviceNameHint
+    /** Clears all connections and found clients */
+    private fun resetConnection() {
+        adapter.items = mutableListOf()
+        sharedViewModel.nearbyDevices.value?.connectedId = null
+        sharedViewModel.nearbyDevices.value?.endpoints?.clear()
 
-        AlertDialog.Builder(activity)
-            .setTitle(R.string.dialog_device_name_title)
-            .setView(userInput)
-            .setPositiveButton(R.string.dialog_confirm) { dialog, whichButton ->
-                val name = userInput.text.toString()
-                binding.tvDeviceName.text = name
-                sharedViewModel.setDeviceName(name)
-            }
-            .setNegativeButton(R.string.dialog_cancel) { dialog, whichButton -> }
-            .show()
-    }
-
-    // Prompts to change the number of movies to choose from
-    private fun changeMovieCount() {
-        val userInput = NumberPicker(activity)
-        userInput.apply {
-            wrapSelectorWheel = true
-            minValue = 2
-            maxValue = 20
-            value = movieCountHint
+        if (::nearbyClient.isInitialized) nearbyClient.apply {
+            connections.stopAdvertising()
+            connections.stopDiscovery()
+            connections.stopAllEndpoints()
+            startAdvertising()
+            startDiscovery()
         }
-
-        AlertDialog.Builder(activity)
-            .setTitle(R.string.dialog_movie_count_title)
-            .setView(userInput)
-            .setPositiveButton(R.string.dialog_confirm) { dialog, whichButton ->
-                val count = userInput.value
-                binding.tvMovieCount.text = count.toString()
-                sharedViewModel.setMovieCount(count)
-            }
-            .setNegativeButton(R.string.dialog_cancel) { dialog, whichButton -> }
-            .show()
     }
 
     override fun onStart() {
         // Clear the old list of found/connected devices and start discovery for new ones
-        sharedViewModel.nearbyDevices.value?.endpoints?.clear()
-        sharedViewModel.nearbyDevices.value?.connectedId = null
+        adapter.items = mutableListOf()
+
+        sharedViewModel.apply {
+            nearbyDevices.value?.endpoints?.clear()
+            nearbyDevices.value?.connectedId = null
+            nearbyClient.connections.stopAllEndpoints()
+        }
+
         if (::nearbyClient.isInitialized) scanForDevices()
 
         super.onStart()
@@ -217,11 +190,12 @@ class ConnectFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_refresh -> {
-                        sharedViewModel.nearbyDevices.value?.endpoints = mutableListOf()
-                        if (::nearbyClient.isInitialized) {
-                            nearbyClient.startAdvertising()
-                            nearbyClient.startDiscovery()
-                        }
+                        resetConnection()
+                        true
+                    }
+
+                    R.id.action_settings -> {
+                        findNavController().navigate(R.id.action_connectFragmentNav_to_settingsFragmentNav)
                         true
                     }
 

@@ -15,6 +15,7 @@
     <string name="action_title_clear">Clear</string>
     <string name="action_title_refresh">Refresh</string>
     <string name="action_title_filter">Filter</string>
+    <string name="action_title_settings">Settings</string>
 
     /** App bottom navigation bar */
     <string name="bottom_navigation_title_connect">Connect</string>
@@ -28,10 +29,15 @@
     <string name="default_device_name">MovieBuff</string>
     <string name="dialog_device_name_title">Name your device:</string>
 
-    /** Movie count */
-    <string name="default_movie_count">5</string>
-    <string name="movie_count_title">Movie Count:</string>
-    <string name="dialog_movie_count_title">Number of movies to select from:</string>
+    /** Preferences */
+    <string name="preferences_device_name_key">device_name</string>
+    <string name="preferences_movie_count_key">movie_count</string>
+    <string name="preferences_default_movie_count">5</string>
+    <string name="preferences_movie_count_title">Movie selection</string>
+    <string name="preferences_device_name_title">Your device name</string>
+    <string name="preferences_movie_count_summary">Number of movies to choose from</string>
+    <string name="preferences_device_name_limitations">Name must not be longer than 12 characters, and one line only</string>
+
 
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_title">Permissions required</string>

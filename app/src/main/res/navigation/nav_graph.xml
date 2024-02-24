@@ -11,6 +11,9 @@
         <action
             android:id="@+id/action_connectFragment_to_selectionFragment"
             app:destination="@id/selectionFragmentNav" />
+        <action
+            android:id="@+id/action_connectFragmentNav_to_settingsFragmentNav"
+            app:destination="@id/settingsFragmentNav" />
     </fragment>
 
     <fragment
@@ -33,5 +36,10 @@
         android:id="@+id/historyFragmentNav"
         android:name="com.andarb.movietinder.view.HistoryFragment"
         android:label="History" />
+
+    <fragment
+        android:id="@+id/settingsFragmentNav"
+        android:name="com.andarb.movietinder.view.SettingsFragment"
+        android:label="Settings" />
 
 </navigation>

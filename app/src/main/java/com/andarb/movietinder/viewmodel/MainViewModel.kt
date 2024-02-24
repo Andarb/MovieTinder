@@ -1,8 +1,6 @@
 package com.andarb.movietinder.viewmodel
 
 import android.app.Application
-import android.content.Context
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,7 +10,6 @@ import com.andarb.movietinder.model.Endpoints
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.remote.NearbyClient
 import com.andarb.movietinder.model.repository.MovieRepository
-import com.andarb.movietinder.model.repository.PreferencesRepository
 import com.andarb.movietinder.util.ClickType
 import com.google.android.gms.nearby.connection.Payload
 import kotlinx.coroutines.Dispatchers
@@ -21,11 +18,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 
-private const val USER_PREFERENCES_NAME = "user_preferences"
-private val Context.dataStore by preferencesDataStore(
-    name = USER_PREFERENCES_NAME
-)
-
 /**
  * Shared ViewModel for fragments.
  * Downloads a list of movies.
@@ -33,9 +25,6 @@ private val Context.dataStore by preferencesDataStore(
  * Sends off selected movie to a connected 'Nearby' device
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val preferencesRepository =
-        PreferencesRepository(dataStore = application.dataStore, context = application)
-    val userPreferencesFlow = preferencesRepository.preferencesFlow
 
     private val movieRepository = MovieRepository(application)
     val dbMovies: LiveData<List<Movie>> = movieRepository.retrieveDb()
@@ -102,20 +91,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val stringPayload = 'm' + Json.encodeToString(movies) // 'm' identifies "movie" payload
             val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
             nearbyClient.connections.sendPayload(deviceId, bytesPayload)
-        }
-    }
-
-    /** Save device name in the preferences */
-    fun setDeviceName(name: String) {
-        viewModelScope.launch {
-            preferencesRepository.updateDeviceName(name)
-        }
-    }
-
-    /** Save number of movies to browse in preferences */
-    fun setMovieCount(count: Int) {
-        viewModelScope.launch {
-            preferencesRepository.updateMovieCount(count)
         }
     }
 }
