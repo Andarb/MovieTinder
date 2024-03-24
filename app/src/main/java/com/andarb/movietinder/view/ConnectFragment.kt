@@ -10,7 +10,14 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -42,6 +49,7 @@ class ConnectFragment : Fragment() {
     private lateinit var preferences: SharedPreferences
     private val sharedViewModel: MainViewModel by activityViewModels()
     private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
+        showProgressbar(getString(R.string.progressbar_connecting))
         nearbyClient.connect(endpoint.id)
     }
 
@@ -62,8 +70,15 @@ class ConnectFragment : Fragment() {
         createMenu()
 
         sharedViewModel.nearbyDevices.observe(viewLifecycleOwner) { nearbyDevices ->
+            binding.progressbarEndpoint.visibility = View.GONE
             adapter.items = nearbyDevices.endpoints.toMutableList()
+
             if (!nearbyDevices.connectedId.isNullOrBlank()) {
+                Toast.makeText(
+                    application,
+                    getString(R.string.toast_connected_endpoint, nearbyDevices.connectedName),
+                    Toast.LENGTH_SHORT
+                ).show()
                 // Once connected to a 'Nearby' device proceed to movie selection
                 findNavController().navigate(R.id.action_connectFragment_to_selectionFragment)
             }
@@ -77,18 +92,19 @@ class ConnectFragment : Fragment() {
 
     /** Confirm or request required permissions */
     private fun checkPermissions() {
+        // Request necessary runtime permissions
+        var permissionArray: Array<String>
+        val requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            // Confirm all permissions were granted
+            val permissionsGranted = !permissions.values.contains(false)
+
+            if (permissionsGranted) scanForDevices() else showPermissionsRationale()
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Request necessary runtime permissions
-            val requestPermissionLauncher = registerForActivityResult(
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissions ->
-                // Confirm all permissions were granted
-                val permissionsGranted = !permissions.values.contains(false)
-
-                if (permissionsGranted) scanForDevices() else showPermissionsRationale()
-            }
-
-            var permissionArray = arrayOf(
+            permissionArray = arrayOf(
                 Manifest.permission.BLUETOOTH_ADVERTISE,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.BLUETOOTH_SCAN,
@@ -97,11 +113,14 @@ class ConnectFragment : Fragment() {
             )
 
             if (Build.VERSION.SDK_INT >= 33) permissionArray += Manifest.permission.NEARBY_WIFI_DEVICES
-
-            requestPermissionLauncher.launch(permissionArray)
         } else {
-            scanForDevices()
+            permissionArray = arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
         }
+
+        requestPermissionLauncher.launch(permissionArray)
     }
 
     /** Show the reason for requiring requested permissions */
@@ -124,19 +143,27 @@ class ConnectFragment : Fragment() {
     /** Advertise and look for other devices that are advertising */
     @SuppressLint("MissingPermission")
     private fun scanForDevices() {
+        showProgressbar(getString(R.string.progressbar_searching))
         nearbyClient = sharedViewModel.nearbyClient
 
         nearbyClient.apply {
+            val defaultName =
+                getString(R.string.default_device_name) + Random.nextInt(100, 999).toString()
             deviceName = preferences.getString(
                 getString(R.string.preferences_device_name_key),
-                getString(R.string.default_device_name) + Random.nextInt(100, 999).toString()
+                defaultName
             ).toString()
+
+            if (deviceName == defaultName) with(preferences.edit()) {
+                putString(getString(R.string.preferences_device_name_key), defaultName)
+                apply()
+            }
+            binding.tvDeviceName.text = deviceName
+
             connections.stopAdvertising()
             startAdvertising()
+            startDiscovery()
         }
-        binding.tvDeviceName.text = nearbyClient.deviceName
-
-        nearbyClient.startDiscovery()
     }
 
     /** Clears all connections and found clients */
@@ -146,12 +173,18 @@ class ConnectFragment : Fragment() {
         sharedViewModel.nearbyDevices.value?.endpoints?.clear()
 
         if (::nearbyClient.isInitialized) nearbyClient.apply {
+            showProgressbar(getString(R.string.progressbar_searching))
             connections.stopAdvertising()
             connections.stopDiscovery()
             connections.stopAllEndpoints()
             startAdvertising()
             startDiscovery()
         }
+    }
+
+    private fun showProgressbar(text: String) {
+        binding.progressbarEndpointText.text = text
+        binding.progressbarEndpoint.visibility = View.VISIBLE
     }
 
     override fun onStart() {
@@ -190,6 +223,11 @@ class ConnectFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_refresh -> {
+                        val refreshIcon: View = requireActivity().findViewById(R.id.action_refresh)
+                        val rotation =
+                            AnimationUtils.loadAnimation(application, R.anim.rotation)
+
+                        refreshIcon.startAnimation(rotation)
                         resetConnection()
                         true
                     }

@@ -114,6 +114,7 @@ fun MutableLiveData<Endpoints>.markConnected(elementId: String) {
         if (index != -1) {
             oldEndpoints[index].isConnected = true
             oldList.connectedId = elementId
+            oldList.connectedName = oldEndpoints[index].name
             this.value = oldList
         }
     }

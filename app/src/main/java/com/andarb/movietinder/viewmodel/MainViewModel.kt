@@ -76,8 +76,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val movieIds = selectedMovies.map { it.id }
         val deviceId = nearbyDevices.value?.connectedId
 
-        if (deviceId != null) {
-            val stringPayload = 'i' + movieIds.joinToString(",") // 'i' identifies "id" payload
+        deviceId?.let {
+            // 'e' = empty payload, 'i' = movie id payload
+            val stringPayload: String = if (movieIds.isEmpty()) "e"
+            else 'i' + movieIds.joinToString(",")
+
             val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
             nearbyClient.connections.sendPayload(deviceId, bytesPayload)
         }

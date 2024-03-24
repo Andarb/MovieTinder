@@ -8,12 +8,24 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Text
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -53,6 +65,25 @@ class HistoryFragment : Fragment() {
                 val filteredMovies = filterMovies(movies.value)
                 val sortedMovies =
                     (filteredMovies.groupBy { it.modifiedAt }).toSortedMap(Comparator.reverseOrder())
+
+                if (filteredMovies.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Image(
+                            modifier = Modifier.size(200.dp),
+                            painter = painterResource(R.drawable.empty_history),
+                            contentDescription = getString(R.string.description_no_history),
+                        )
+                        Text(
+                            text = getString(R.string.info_no_history),
+                            color = Color(0xFF303030),
+                            fontSize = 28.sp
+                        )
+                    }
+                }
 
                 val clickListener: (Movie, ClickType) -> Unit =
                     { movie: Movie, clickType: ClickType ->
@@ -120,7 +151,7 @@ class HistoryFragment : Fragment() {
     /**  Display a dialogue window to confirm erasure of selected movies from history */
     private fun showClearDialog() {
         MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
-            .setTitle(R.string.dialog_confirm)
+            .setTitle(R.string.dialog_confirm_delete)
             .setMessage(R.string.dialog_erase_history)
             .setPositiveButton(R.string.dialog_erase_history_yes) { dialog, id ->
                 sharedViewModel.apply { deleteMovies(filterMovies(dbMovies.value)) }

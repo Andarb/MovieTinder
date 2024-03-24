@@ -23,6 +23,28 @@
         android:text="@string/default_device_name"
         android:textSize="16sp" />
 
+    <LinearLayout
+        android:id="@+id/progressbar_endpoint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/description_progressbar"
+            android:indeterminate="true" />
+
+        <TextView
+            android:id="@+id/progressbar_endpoint_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/tv_error_permissions"
         android:layout_width="wrap_content"

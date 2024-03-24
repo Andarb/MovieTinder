@@ -147,9 +147,13 @@ class NearbyClient(
             if (payloadBytes != null) {
                 val stringPayload: String = payloadBytes.decodeToString()
 
-                if (stringPayload[0] == 'i') nearbyMovieIds.value =
-                    stringPayload.substring(1).split(",").map { it.toInt() }
-                else nearbyMovies.value = Json.decodeFromString(stringPayload.substring(1))
+                when (stringPayload[0]) {
+                    'i' -> nearbyMovieIds.value =
+                        stringPayload.substring(1).split(",").map { it.toInt() }
+
+                    'm' -> nearbyMovies.value = Json.decodeFromString(stringPayload.substring(1))
+                    else -> nearbyMovieIds.value = emptyList()
+                }
             }
         }
 
