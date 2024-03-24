@@ -6,7 +6,10 @@
     <string name="description_like">Like/Dislike</string>
     <string name="description_delete">Delete</string>
     <string name="description_name">Change device name</string>
-    <string name="description_count">Change movie count</string>
+    <string name="description_progressbar">Progress indicator</string>
+    <string name="description_no_history">Empty folder</string>
+    <string name="description_not_connected">3 person silhouettes with an "X" over them</string>
+    <string name="description_no_matches">Sad face emoticon</string>
 
     /** App top bar menu */
     <string name="action_title_connect">Connect</string>
@@ -22,9 +25,6 @@
     <string name="bottom_navigation_title_matches">Matches</string>
     <string name="bottom_navigation_title_history">History</string>
 
-    /** Endpoint device ID formatting */
-    <string name="formatting_id">[%1$s]</string>
-
     /** Device name */
     <string name="default_device_name">MovieBuff</string>
     <string name="dialog_device_name_title">Name your device:</string>
@@ -36,8 +36,6 @@
     <string name="preferences_movie_count_title">Movie selection</string>
     <string name="preferences_device_name_title">Your device name</string>
     <string name="preferences_movie_count_summary">Number of movies to choose from</string>
-    <string name="preferences_device_name_limitations">Name must not be longer than 12 characters, and one line only</string>
-
 
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_title">Permissions required</string>
@@ -55,12 +53,27 @@
     </string-array>
 
     /** Dialog box for clearing movies in HistoryFragment */
-    <string name="dialog_erase_history">Are you sure you wanted to erase all the movies listed below from history?</string>
+    <string name="dialog_erase_history">Are you sure you wanted to erase all the movies listed below from history? This cannot be undone.</string>
     <string name="dialog_erase_history_yes">Delete</string>
 
     /** Dialog box general */
     <string name="dialog_cancel">Cancel</string>
-    <string name="dialog_confirm">Confirm</string>
+    <string name="dialog_confirm_delete">Confirm delete</string>
+
+    /** Toast messages */
+    <string name="toast_connected_endpoint">Connected to %1$s</string>
+    <string name="toast_matches_received">Matches received</string>
+    <string name="toast_device_name_limitations">Name must not be longer than 12 characters, and one line only</string>
+
+    /** Progressbar titles */
+    <string name="progressbar_searching">Searching</string>
+    <string name="progressbar_connecting">Connecting</string>
+    <string name="progressbar_waiting">Waiting for friend</string>
+
+    /** User displayed informational messages */
+    <string name="info_no_history">No records found</string>
+    <string name="info_not_connected">Not currently connected</string>
+    <string name="info_no_matches">No movies matched</string>
 
     /** User displayed error messages */
     <string name="error_insufficient_permissions">Unable to scan for nearby devices\n\nPlease allow the

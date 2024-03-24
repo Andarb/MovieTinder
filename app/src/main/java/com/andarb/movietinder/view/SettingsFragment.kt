@@ -25,7 +25,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 if (stringValue.length > 12 || stringValue.contains("\n")) {
                     Toast.makeText(
                         requireContext(),
-                        getString(R.string.preferences_device_name_limitations),
+                        getString(R.string.toast_device_name_limitations),
                         Toast.LENGTH_LONG
                     ).show()
                     false

@@ -1,9 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/recyclerview_matches"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:paddingBottom="16dp" />
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview_matches"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="16dp" />
+
+    <LinearLayout
+        android:id="@+id/progressbar_matches"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:contentDescription="@string/description_progressbar"
+            android:indeterminate="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/progressbar_waiting" />
+    </LinearLayout>
+
+    <TextView
+        android:textSize="28sp"
+        android:id="@+id/tv_iv_not_connected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:contentDescription="@string/description_not_connected"
+        android:gravity="center_horizontal"
+        android:text="@string/info_not_connected"
+        android:visibility="gone"
+        app:drawableTopCompat="@drawable/not_connected" />
+
+    <TextView
+        android:textSize="28sp"
+        android:id="@+id/tv_iv_no_matches"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:contentDescription="@string/description_no_matches"
+        android:gravity="center_horizontal"
+        android:text="@string/info_no_matches"
+        android:visibility="gone"
+        app:drawableTopCompat="@drawable/no_matches" />
+</FrameLayout>

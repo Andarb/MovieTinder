@@ -36,6 +36,10 @@ class SelectionFragment : Fragment(), CardStackListener {
         binding.cardstackMovies.layoutManager = layoutManager
         binding.cardstackMovies.adapter = adapter
 
+        // Clear the last session
+        sharedViewModel.selectedMovies.clear()
+        sharedViewModel.nearbyMovieIds.value = null
+
         val preferences = PreferenceManager.getDefaultSharedPreferences(requireActivity())
         val movieCountPref = preferences.getInt(
             getString(R.string.preferences_movie_count_key),
