@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.andarb.movietinder.model.Endpoints
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.remote.NearbyClient
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.model.repository.MovieRepository
 import com.andarb.movietinder.util.ClickType
 import com.google.android.gms.nearby.connection.Payload
@@ -30,11 +31,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val dbMovies: LiveData<List<Movie>> = movieRepository.retrieveDb()
     val selectedMovies: MutableList<Movie> = mutableListOf()
 
-    val nearbyMovieIds: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
+    val nearbyMovieIDs: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
     val nearbyMovies: MutableLiveData<List<Movie>> by lazy { MutableLiveData<List<Movie>>() }
     val nearbyDevices: MutableLiveData<Endpoints> = MutableLiveData(Endpoints(mutableListOf()))
     val nearbyClient: NearbyClient =
-        NearbyClient(application, nearbyMovieIds, nearbyMovies, nearbyDevices)
+        NearbyClient(application, nearbyMovieIDs, nearbyMovies, nearbyDevices)
 
     /** Returns downloaded movies from TMDb */
     fun remoteMovies() =
@@ -74,26 +75,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Send a list of selected movie ids to a connected 'Nearby' device */
     fun sendMatchedMovies() {
         val movieIds = selectedMovies.map { it.id }
-        val deviceId = nearbyDevices.value?.connectedId
 
-        deviceId?.let {
-            // 'e' = empty payload, 'i' = movie id payload
-            val stringPayload: String = if (movieIds.isEmpty()) "e"
-            else 'i' + movieIds.joinToString(",")
+        // 'e' = empty payload, 'i' = movie id payload
+        val stringPayload: String = if (movieIds.isEmpty()) "e"
+        else 'i' + movieIds.joinToString(",")
 
-            val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
-            nearbyClient.connections.sendPayload(deviceId, bytesPayload)
-        }
+        val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
+        nearbyClient.connections.sendPayload(RemoteEndpoint.deviceId, bytesPayload)
     }
 
     /** Send host movie selection to a connected 'Nearby' device */
     fun sendMovieSelection(movies: List<Movie>) {
-        val deviceId = nearbyDevices.value?.connectedId
+        val stringPayload = 'm' + Json.encodeToString(movies) // 'm' identifies "movie" payload
+        val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
 
-        if (deviceId != null) {
-            val stringPayload = 'm' + Json.encodeToString(movies) // 'm' identifies "movie" payload
-            val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
-            nearbyClient.connections.sendPayload(deviceId, bytesPayload)
-        }
+        nearbyClient.connections.sendPayload(RemoteEndpoint.deviceId, bytesPayload)
     }
 }

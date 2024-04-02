@@ -29,20 +29,19 @@ import kotlinx.serialization.json.Json
  */
 class NearbyClient(
     private val application: Application,
-    private val nearbyMovieIds: MutableLiveData<List<Int>>,
+    private val nearbyMovieIDs: MutableLiveData<List<Int>>,
     private val nearbyMovies: MutableLiveData<List<Movie>>,
     private var endpoints: MutableLiveData<Endpoints>
 ) {
     private val strategy = Strategy.P2P_POINT_TO_POINT
     val connections = Nearby.getConnectionsClient(application.applicationContext)
-    var deviceName = application.getString(R.string.error_insufficient_permissions_devicename)
-    var isHost: Boolean = false
+    var localDeviceName = application.getString(R.string.error_insufficient_permissions_devicename)
 
 
     /** Establishes a connection to an endpoint */
     fun connect(endpointId: String) {
         connections
-            .requestConnection(deviceName, endpointId, connectionLifecycleCallback)
+            .requestConnection(localDeviceName, endpointId, connectionLifecycleCallback)
             .addOnSuccessListener { _: Void? ->
                 // We successfully requested a connection. Now both sides
                 // must accept before the connection is established.
@@ -56,7 +55,7 @@ class NearbyClient(
     fun startAdvertising() {
         val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
         connections.startAdvertising(
-            deviceName,
+            localDeviceName,
             application.packageName,
             connectionLifecycleCallback,
             advertisingOptions
@@ -102,7 +101,7 @@ class NearbyClient(
         object : ConnectionLifecycleCallback() {
             override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
                 // Automatically accept the connection on both sides.
-                isHost = !(connectionInfo.isIncomingConnection)
+                RemoteEndpoint.hasInitiatedConnection = connectionInfo.isIncomingConnection
                 connections.acceptConnection(endpointId, payloadCallback)
             }
 
@@ -131,7 +130,9 @@ class NearbyClient(
 
             override fun onDisconnected(endpointId: String) {
                 // We've been disconnected from this endpoint. No more data can be sent or received
+                RemoteEndpoint.reset()
                 endpoints.removeElement(endpointId)
+                startAdvertising()
                 startDiscovery()
             }
         }
@@ -148,11 +149,11 @@ class NearbyClient(
                 val stringPayload: String = payloadBytes.decodeToString()
 
                 when (stringPayload[0]) {
-                    'i' -> nearbyMovieIds.value =
+                    'i' -> nearbyMovieIDs.value =
                         stringPayload.substring(1).split(",").map { it.toInt() }
 
                     'm' -> nearbyMovies.value = Json.decodeFromString(stringPayload.substring(1))
-                    else -> nearbyMovieIds.value = emptyList()
+                    else -> nearbyMovieIDs.value = emptyList()
                 }
             }
         }
@@ -161,5 +162,24 @@ class NearbyClient(
             // Bytes payloads are sent as a single chunk, so you'll receive a SUCCESS update immediately
             // after the call to onPayloadReceived().
         }
+    }
+}
+
+/**
+ * Keeps Endpoint connection state and relevant information
+ */
+object RemoteEndpoint {
+    var deviceName = ""
+    var deviceId = ""
+    var isConnected = false
+    var hasInitiatedConnection = false
+    var hasReceivedMatches = false
+
+    fun reset() {
+        deviceName = ""
+        deviceId = ""
+        isConnected = false
+        hasInitiatedConnection = false
+        hasReceivedMatches = false
     }
 }

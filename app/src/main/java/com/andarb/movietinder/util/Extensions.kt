@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.Endpoints
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -84,7 +85,6 @@ fun MutableLiveData<Endpoints>.removeElement(elementId: String) {
         val index = oldEndpoints.indexOfFirst { it.id == elementId }
 
         if (index != -1) {
-            oldEndpoints[index].isConnected = false
             oldEndpoints.removeAt(index)
             this.value = oldList
         }
@@ -112,9 +112,11 @@ fun MutableLiveData<Endpoints>.markConnected(elementId: String) {
         val index = oldEndpoints.indexOfFirst { it.id == elementId }
 
         if (index != -1) {
-            oldEndpoints[index].isConnected = true
-            oldList.connectedId = elementId
-            oldList.connectedName = oldEndpoints[index].name
+            RemoteEndpoint.apply {
+                isConnected = true
+                deviceId = elementId
+                deviceName = oldEndpoints[index].name
+            }
             this.value = oldList
         }
     }
