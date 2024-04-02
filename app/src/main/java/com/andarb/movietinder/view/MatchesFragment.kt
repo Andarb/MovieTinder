@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentMatchesBinding
 import com.andarb.movietinder.model.Movie
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.view.adapters.MatchesAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
@@ -34,7 +35,7 @@ class MatchesFragment : Fragment() {
         binding.recyclerviewMatches.adapter = adapter
         binding.recyclerviewMatches.layoutManager = LinearLayoutManager(context)
 
-        sharedViewModel.nearbyMovieIds.observe(viewLifecycleOwner) { ids ->
+        sharedViewModel.nearbyMovieIDs.observe(viewLifecycleOwner) { ids ->
             if (ids != null) {
                 Toast.makeText(
                     requireContext(),
@@ -54,13 +55,14 @@ class MatchesFragment : Fragment() {
 
                 adapter.items = matchedMovies
                 if (matchedMovies.isEmpty()) binding.tvIvNoMatches.visibility = View.VISIBLE
+                RemoteEndpoint.hasReceivedMatches = true
             }
         }
 
-        if (sharedViewModel.nearbyDevices.value?.connectedId.isNullOrBlank()) {
+        if (!RemoteEndpoint.isConnected) {
             binding.tvIvNoMatches.visibility = View.GONE
             binding.tvIvNotConnected.visibility = View.VISIBLE
-        } else {
+        } else if (!RemoteEndpoint.hasReceivedMatches) {
             binding.tvIvNotConnected.visibility = View.GONE
             binding.progressbarMatches.visibility = View.VISIBLE
             sharedViewModel.sendMatchedMovies()

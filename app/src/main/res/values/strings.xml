@@ -40,8 +40,8 @@
     /** Dialog box requesting failed permissions */
     <string name="dialog_permissions_title">Permissions required</string>
     <string name="dialog_permissions_message">This app requires <b>Nearby Devices</b> and
-        <b>Location</b> permissions to be able to find and communicate with nearby devices. Please
-        open the app <b>Settings</b> to enable the necessary permissions.</string>
+        <b>Location</b> permissions to be able to find and communicate with nearby devices. It also uses <b>Notification</b> permission to display connected device information. Please
+        open this app\'s <b>Settings</b> to enable the necessary permissions.</string>
     <string name="dialog_permissions_button_settings">Settings</string>
 
     /** Dialog box for filtering movies in HistoryFragment */
@@ -80,4 +80,9 @@
         necessary permissions in the app Settings</string>
     <string name="error_insufficient_permissions_devicename">MissingPermissionsName</string>
     <string name="error_bluetooth_not_found">ERROR - Bluetooth Not Found!</string>
+
+    /** Notification setup */
+    <string name="notification_name">Connections</string>
+    <string name="notification_description">Shows active devices</string>
+    <string name="notification_button_disconnect">DISCONNECT</string>
 </resources>

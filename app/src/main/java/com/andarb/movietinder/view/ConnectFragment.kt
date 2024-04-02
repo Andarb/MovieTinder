@@ -4,8 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Application
+import android.app.Notification
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -31,6 +36,7 @@ import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.remote.NearbyClient
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.view.adapters.EndpointAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
 import kotlin.random.Random
@@ -73,13 +79,15 @@ class ConnectFragment : Fragment() {
             binding.progressbarEndpoint.visibility = View.GONE
             adapter.items = nearbyDevices.endpoints.toMutableList()
 
-            if (!nearbyDevices.connectedId.isNullOrBlank()) {
+            if (RemoteEndpoint.isConnected) {
                 Toast.makeText(
                     application,
-                    getString(R.string.toast_connected_endpoint, nearbyDevices.connectedName),
+                    getString(R.string.toast_connected_endpoint, RemoteEndpoint.deviceName),
                     Toast.LENGTH_SHORT
                 ).show()
-                // Once connected to a 'Nearby' device proceed to movie selection
+
+                // Once connected to a 'Nearby' device, display it in a notification and proceed to movie selection
+                sendNotification()
                 findNavController().navigate(R.id.action_connectFragment_to_selectionFragment)
             }
         }
@@ -89,6 +97,36 @@ class ConnectFragment : Fragment() {
         return binding.root
     }
 
+    /** Creates and sends a notification about the connected device */
+    private fun sendNotification() {
+        val notificationManager =
+            requireActivity().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val intent = Intent(application, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent: PendingIntent =
+            PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val action: Notification.Action = Notification.Action.Builder(
+            Icon.createWithResource(application, R.drawable.broken_link_icon),
+            getString(R.string.notification_button_disconnect),
+            pendingIntent
+        ).build()
+
+        val notification: Notification = Notification.Builder(application, application.packageName)
+            .setContentTitle(
+                getString(
+                    R.string.toast_connected_endpoint,
+                    RemoteEndpoint.deviceName
+                )
+            )
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setOngoing(true)
+            .addAction(action)
+            .build()
+
+        notificationManager.notify(NOTIFICATION_ID, notification)
+    }
 
     /** Confirm or request required permissions */
     private fun checkPermissions() {
@@ -112,7 +150,10 @@ class ConnectFragment : Fragment() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
 
-            if (Build.VERSION.SDK_INT >= 33) permissionArray += Manifest.permission.NEARBY_WIFI_DEVICES
+            if (Build.VERSION.SDK_INT >= 33) permissionArray += arrayOf(
+                Manifest.permission.NEARBY_WIFI_DEVICES,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
         } else {
             permissionArray = arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -149,16 +190,16 @@ class ConnectFragment : Fragment() {
         nearbyClient.apply {
             val defaultName =
                 getString(R.string.default_device_name) + Random.nextInt(100, 999).toString()
-            deviceName = preferences.getString(
+            localDeviceName = preferences.getString(
                 getString(R.string.preferences_device_name_key),
                 defaultName
             ).toString()
 
-            if (deviceName == defaultName) with(preferences.edit()) {
+            if (localDeviceName == defaultName) with(preferences.edit()) {
                 putString(getString(R.string.preferences_device_name_key), defaultName)
                 apply()
             }
-            binding.tvDeviceName.text = deviceName
+            binding.tvDeviceName.text = localDeviceName
 
             connections.stopAdvertising()
             startAdvertising()
@@ -166,10 +207,10 @@ class ConnectFragment : Fragment() {
         }
     }
 
-    /** Clears all connections and found clients */
+    /** Clears all connections and found devices */
     private fun resetConnection() {
         adapter.items = mutableListOf()
-        sharedViewModel.nearbyDevices.value?.connectedId = null
+        RemoteEndpoint.reset()
         sharedViewModel.nearbyDevices.value?.endpoints?.clear()
 
         if (::nearbyClient.isInitialized) nearbyClient.apply {
@@ -193,7 +234,7 @@ class ConnectFragment : Fragment() {
 
         sharedViewModel.apply {
             nearbyDevices.value?.endpoints?.clear()
-            nearbyDevices.value?.connectedId = null
+            RemoteEndpoint.reset()
             nearbyClient.connections.stopAllEndpoints()
         }
 

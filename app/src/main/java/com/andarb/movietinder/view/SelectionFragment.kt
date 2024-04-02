@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentSelectionBinding
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.view.adapters.MovieCardAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
@@ -38,7 +39,7 @@ class SelectionFragment : Fragment(), CardStackListener {
 
         // Clear the last session
         sharedViewModel.selectedMovies.clear()
-        sharedViewModel.nearbyMovieIds.value = null
+        sharedViewModel.nearbyMovieIDs.value = null
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(requireActivity())
         val movieCountPref = preferences.getInt(
@@ -47,15 +48,15 @@ class SelectionFragment : Fragment(), CardStackListener {
         )
 
         sharedViewModel.apply {
-            if (nearbyClient.isHost) {
+            if (RemoteEndpoint.hasInitiatedConnection) {
+                nearbyMovies.observe(viewLifecycleOwner) {
+                    adapter.items = it
+                }
+            } else {
                 remoteMovies().observe(viewLifecycleOwner) {
                     val trimmedList = it.movies.subList(0, movieCountPref)
                     sendMovieSelection(trimmedList)
                     adapter.items = trimmedList
-                }
-            } else {
-                nearbyMovies.observe(viewLifecycleOwner) {
-                    adapter.items = it
                 }
             }
         }
