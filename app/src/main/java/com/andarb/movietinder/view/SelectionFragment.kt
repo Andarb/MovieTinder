@@ -38,8 +38,8 @@ class SelectionFragment : Fragment(), CardStackListener {
         binding.cardstackMovies.adapter = adapter
 
         // Clear the last session
-        sharedViewModel.selectedMovies.clear()
-        sharedViewModel.nearbyMovieIDs.value = null
+        sharedViewModel.localLikedMovies.clear()
+        sharedViewModel.remoteMovieIDs.value = null
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(requireActivity())
         val movieCountPref = preferences.getInt(
@@ -49,13 +49,13 @@ class SelectionFragment : Fragment(), CardStackListener {
 
         sharedViewModel.apply {
             if (RemoteEndpoint.hasInitiatedConnection) {
-                nearbyMovies.observe(viewLifecycleOwner) {
+                remoteMovies.observe(viewLifecycleOwner) {
                     adapter.items = it
                 }
             } else {
                 remoteMovies().observe(viewLifecycleOwner) {
                     val trimmedList = it.movies.subList(0, movieCountPref)
-                    sendMovieSelection(trimmedList)
+                    shareDownloadedMovies(trimmedList)
                     adapter.items = trimmedList
                 }
             }
@@ -66,14 +66,16 @@ class SelectionFragment : Fragment(), CardStackListener {
 
     /** Saves user selection on swipe */
     override fun onCardSwiped(direction: Direction?, swipedPosition: Int) {
+        if (!RemoteEndpoint.isConnected) findNavController().navigateUp()
         val movie = adapter.items[swipedPosition]
         val isLiked = direction == Direction.Right
         val finalPosition = adapter.itemCount - 1
 
         sharedViewModel.saveMovie(movie, isLiked)
 
-        // Proceed to results screen after reaching the limit
+        // Share your choices, and proceed to results screen after reaching the end of movie list
         if (swipedPosition == finalPosition && findNavController().currentDestination?.id == R.id.selectionFragmentNav) {
+            sharedViewModel.shareLikedMovies()
             findNavController().navigate(R.id.action_selectionFragment_to_matchesFragment)
         }
     }

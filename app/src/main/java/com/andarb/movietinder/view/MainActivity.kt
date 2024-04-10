@@ -1,7 +1,6 @@
 package com.andarb.movietinder.view
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -13,8 +12,10 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.ActivityMainBinding
+import com.andarb.movietinder.model.local.ConnectionBroadcastReceiver
+import com.andarb.movietinder.model.local.NotificationManagement
+import com.andarb.movietinder.model.remote.RemoteEndpoint
 
-const val NOTIFICATION_ID = 753159
 
 /**
  * Sets up bottom navigation and navigation controller
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private val broadcastReceiver: BroadcastReceiver = ConnectionBroadcastReceiver()
+    private lateinit var notificationManagement: NotificationManagement
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,13 +33,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Setup Notification channel
-        val name = getString(R.string.notification_name)
-        val descriptionText = getString(R.string.notification_description)
-        val importance = NotificationManager.IMPORTANCE_LOW
-        val mChannel = NotificationChannel(application.packageName, name, importance)
-        mChannel.description = descriptionText
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(mChannel)
+        notificationManagement = NotificationManagement(application)
+        notificationManagement.setupChannel()
 
         // Setup NavigationController
         val navHostFragment =
@@ -69,5 +67,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (RemoteEndpoint.isConnected) {
+            notificationManagement.send()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        if (RemoteEndpoint.isConnected) {
+            notificationManagement.cancel()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(broadcastReceiver)
     }
 }
