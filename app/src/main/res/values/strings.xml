@@ -61,8 +61,9 @@
     <string name="dialog_confirm_delete">Confirm delete</string>
 
     /** Toast messages */
-    <string name="toast_connected_endpoint">Connected to %1$s</string>
-    <string name="toast_matches_received">Matches received</string>
+    <string name="toast_connected_endpoint">%1$s connected</string>
+    <string name="toast_disconnected_endpoint">%1$s disconnected</string>
+    <string name="toast_selection_received">%1$s has chosen</string>
     <string name="toast_device_name_limitations">Name must not be longer than 12 characters, and one line only</string>
 
     /** Progressbar titles */

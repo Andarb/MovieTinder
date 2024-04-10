@@ -26,6 +26,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <receiver
+            android:name=".model.local.ConnectionBroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.andarb.movietinder.DISCONNECT_ENDPOINTS" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".view.MainActivity"
             android:exported="true">

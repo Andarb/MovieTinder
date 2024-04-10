@@ -29,13 +29,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val movieRepository = MovieRepository(application)
     val dbMovies: LiveData<List<Movie>> = movieRepository.retrieveDb()
-    val selectedMovies: MutableList<Movie> = mutableListOf()
+    val localLikedMovies: MutableList<Movie> = mutableListOf()
 
-    val nearbyMovieIDs: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
-    val nearbyMovies: MutableLiveData<List<Movie>> by lazy { MutableLiveData<List<Movie>>() }
+    val remoteMovieIDs: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
+    val remoteMovies: MutableLiveData<List<Movie>> by lazy { MutableLiveData<List<Movie>>() }
     val nearbyDevices: MutableLiveData<Endpoints> = MutableLiveData(Endpoints(mutableListOf()))
     val nearbyClient: NearbyClient =
-        NearbyClient(application, nearbyMovieIDs, nearbyMovies, nearbyDevices)
+        NearbyClient(application, remoteMovieIDs, remoteMovies, nearbyDevices)
 
     /** Returns downloaded movies from TMDb */
     fun remoteMovies() =
@@ -56,25 +56,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Saves the selected movie into db */
+    /** Saves the selected movie to local storage */
     fun saveMovie(movie: Movie?, isLiked: Boolean) {
         movie?.let {
             it.isLiked = isLiked
             it.modifiedAt = LocalDate.now()
-            if (isLiked) selectedMovies.add(movie)
+            if (isLiked) localLikedMovies.add(movie)
             viewModelScope.launch { movieRepository.insert(it) }
         }
     }
 
-
-    /** Delete selected movies from db */
+    /** Delete selected movies from local storage */
     fun deleteMovies(movies: List<Movie>) {
         viewModelScope.launch { movieRepository.delete(movies) }
     }
 
-    /** Send a list of selected movie ids to a connected 'Nearby' device */
-    fun sendMatchedMovies() {
-        val movieIds = selectedMovies.map { it.id }
+    /** Send a list of liked movie ids to the connected 'Nearby' device */
+    fun shareLikedMovies() {
+        val movieIds = localLikedMovies.map { it.id }
 
         // 'e' = empty payload, 'i' = movie id payload
         val stringPayload: String = if (movieIds.isEmpty()) "e"
@@ -84,8 +83,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         nearbyClient.connections.sendPayload(RemoteEndpoint.deviceId, bytesPayload)
     }
 
-    /** Send host movie selection to a connected 'Nearby' device */
-    fun sendMovieSelection(movies: List<Movie>) {
+    /** Host sends the downloaded movies to the connected 'Nearby' device */
+    fun shareDownloadedMovies(movies: List<Movie>) {
         val stringPayload = 'm' + Json.encodeToString(movies) // 'm' identifies "movie" payload
         val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
 

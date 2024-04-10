@@ -4,13 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Application
-import android.app.Notification
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +30,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentConnectBinding
 import com.andarb.movietinder.model.Endpoint
+import com.andarb.movietinder.model.local.NotificationManagement
 import com.andarb.movietinder.model.remote.NearbyClient
 import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.view.adapters.EndpointAdapter
@@ -53,6 +49,7 @@ class ConnectFragment : Fragment() {
     private lateinit var application: Application
     private lateinit var adapter: EndpointAdapter
     private lateinit var preferences: SharedPreferences
+
     private val sharedViewModel: MainViewModel by activityViewModels()
     private val endpointClickListener: (Endpoint) -> Unit = { endpoint: Endpoint ->
         showProgressbar(getString(R.string.progressbar_connecting))
@@ -66,6 +63,7 @@ class ConnectFragment : Fragment() {
         application = requireActivity().application
         preferences = PreferenceManager.getDefaultSharedPreferences(application)
         binding = FragmentConnectBinding.inflate(inflater, container, false)
+        val notificationManagement = NotificationManagement(application)
 
         adapter = EndpointAdapter(endpointClickListener)
         binding.tvErrorPermissions.visibility = View.INVISIBLE
@@ -87,7 +85,7 @@ class ConnectFragment : Fragment() {
                 ).show()
 
                 // Once connected to a 'Nearby' device, display it in a notification and proceed to movie selection
-                sendNotification()
+                notificationManagement.send()
                 findNavController().navigate(R.id.action_connectFragment_to_selectionFragment)
             }
         }
@@ -97,36 +95,6 @@ class ConnectFragment : Fragment() {
         return binding.root
     }
 
-    /** Creates and sends a notification about the connected device */
-    private fun sendNotification() {
-        val notificationManager =
-            requireActivity().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val intent = Intent(application, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent: PendingIntent =
-            PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-        val action: Notification.Action = Notification.Action.Builder(
-            Icon.createWithResource(application, R.drawable.broken_link_icon),
-            getString(R.string.notification_button_disconnect),
-            pendingIntent
-        ).build()
-
-        val notification: Notification = Notification.Builder(application, application.packageName)
-            .setContentTitle(
-                getString(
-                    R.string.toast_connected_endpoint,
-                    RemoteEndpoint.deviceName
-                )
-            )
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setOngoing(true)
-            .addAction(action)
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID, notification)
-    }
 
     /** Confirm or request required permissions */
     private fun checkPermissions() {

@@ -1,11 +1,13 @@
 package com.andarb.movietinder.model.remote
 
 import android.app.Application
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.andarb.movietinder.R
 import com.andarb.movietinder.model.Endpoint
 import com.andarb.movietinder.model.Endpoints
 import com.andarb.movietinder.model.Movie
+import com.andarb.movietinder.model.local.NotificationManagement
 import com.andarb.movietinder.util.addElement
 import com.andarb.movietinder.util.markConnected
 import com.andarb.movietinder.util.removeElement
@@ -36,6 +38,11 @@ class NearbyClient(
     private val strategy = Strategy.P2P_POINT_TO_POINT
     val connections = Nearby.getConnectionsClient(application.applicationContext)
     var localDeviceName = application.getString(R.string.error_insufficient_permissions_devicename)
+    private val disconnectedToast: Toast = Toast.makeText(
+        application,
+        "",
+        Toast.LENGTH_LONG
+    )
 
 
     /** Establishes a connection to an endpoint */
@@ -112,16 +119,26 @@ class NearbyClient(
                         endpoints.markConnected(endpointId)
                         connections.stopDiscovery()
                         connections.stopAdvertising()
+                        disconnectedToast.setText(
+                            application.getString(
+                                R.string.toast_disconnected_endpoint,
+                                RemoteEndpoint.deviceName
+                            )
+                        )
                     }
+
                     ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                         // The connection was rejected by one or both sides.
                     }
+
                     ConnectionsStatusCodes.STATUS_ERROR -> {
                         // The connection broke before it was able to be accepted.
                     }
+
                     ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT -> {
                         // The connection broke before it was able to be accepted.
                     }
+
                     else -> {
                         // Unknown status code
                     }
@@ -130,10 +147,11 @@ class NearbyClient(
 
             override fun onDisconnected(endpointId: String) {
                 // We've been disconnected from this endpoint. No more data can be sent or received
+                disconnectedToast.show()
                 RemoteEndpoint.reset()
-                endpoints.removeElement(endpointId)
-                startAdvertising()
-                startDiscovery()
+
+                val notificationManagement = NotificationManagement(application)
+                notificationManagement.cancel()
             }
         }
 
@@ -149,10 +167,22 @@ class NearbyClient(
                 val stringPayload: String = payloadBytes.decodeToString()
 
                 when (stringPayload[0]) {
-                    'i' -> nearbyMovieIDs.value =
-                        stringPayload.substring(1).split(",").map { it.toInt() }
+                    'i' -> {  // remote device sent their chosen movies
+                        nearbyMovieIDs.value =
+                            stringPayload.substring(1).split(",").map { it.toInt() }
 
-                    'm' -> nearbyMovies.value = Json.decodeFromString(stringPayload.substring(1))
+                        Toast.makeText(
+                            application,
+                            application.getString(
+                                R.string.toast_selection_received,
+                                RemoteEndpoint.deviceName
+                            ),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    'm' -> nearbyMovies.value =
+                        Json.decodeFromString(stringPayload.substring(1)) // host shared downloaded movies
                     else -> nearbyMovieIDs.value = emptyList()
                 }
             }
@@ -180,6 +210,5 @@ object RemoteEndpoint {
         deviceId = ""
         isConnected = false
         hasInitiatedConnection = false
-        hasReceivedMatches = false
     }
 }
