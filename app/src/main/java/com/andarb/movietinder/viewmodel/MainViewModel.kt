@@ -31,7 +31,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val dbMovies: LiveData<List<Movie>> = movieRepository.retrieveDb()
     val localLikedMovies: MutableList<Movie> = mutableListOf()
 
-    val remoteMovieIDs: MutableLiveData<List<Int>> by lazy { MutableLiveData<List<Int>>() }
+    val remoteMovieIDs: MutableLiveData<List<Int>?> by lazy { MutableLiveData<List<Int>?>() }
     val remoteMovies: MutableLiveData<List<Movie>> by lazy { MutableLiveData<List<Movie>>() }
     val nearbyDevices: MutableLiveData<Endpoints> = MutableLiveData(Endpoints(mutableListOf()))
     val nearbyClient: NearbyClient =

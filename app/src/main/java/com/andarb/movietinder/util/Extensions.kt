@@ -95,29 +95,38 @@ fun MutableLiveData<Endpoints>.removeElement(elementId: String) {
 }
 
 /** Adds an element to the endpoint list and notifies observer */
-fun MutableLiveData<Endpoints>.addElement(element: Endpoint) {
+fun MutableLiveData<Endpoints>.addElement(element: Endpoint, localDeviceName: String) {
     val oldList = this.value
     val oldEndpoints = oldList?.endpoints
 
-    oldEndpoints?.add(element)
-    this.value = oldList
+    if (element.name != localDeviceName) { // skip for this device name
+        val duplicateFound = oldEndpoints?.find { it.name == element.name }
+
+        when (duplicateFound?.name) {
+            element.name -> {  // for an already found endpoint - update it
+                oldEndpoints.remove(duplicateFound)
+                oldEndpoints.add(element)
+                this.value = oldList
+            }
+
+            else -> {
+                oldEndpoints?.add(element)
+                this.value = oldList
+            }
+        }
+
+    }
 }
 
-/** Marks an endpoint in the list as connected and notifies observer */
+/** Clears endpoint list, notifies observer and sets connection details */
 fun MutableLiveData<Endpoints>.markConnected(elementId: String) {
-    val oldList = this.value
-    val oldEndpoints = oldList?.endpoints
+    this.value?.endpoints?.clear()
+    val clearedList = this.value
 
-    if (!oldEndpoints.isNullOrEmpty()) {
-        val index = oldEndpoints.indexOfFirst { it.id == elementId }
-
-        if (index != -1) {
-            RemoteEndpoint.apply {
-                isConnected = true
-                deviceId = elementId
-                deviceName = oldEndpoints[index].name
-            }
-            this.value = oldList
-        }
+    RemoteEndpoint.apply {
+        isConnected = true
+        deviceId = elementId
     }
+
+    this.value = clearedList
 }

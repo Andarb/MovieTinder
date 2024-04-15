@@ -48,12 +48,12 @@ class SelectionFragment : Fragment(), CardStackListener {
         )
 
         sharedViewModel.apply {
-            if (RemoteEndpoint.hasInitiatedConnection) {
+            if (RemoteEndpoint.hasInitiatedConnection) {  // display movies received from friend
                 remoteMovies.observe(viewLifecycleOwner) {
                     adapter.items = it
                 }
             } else {
-                remoteMovies().observe(viewLifecycleOwner) {
+                remoteMovies().observe(viewLifecycleOwner) {// share movies with friend
                     val trimmedList = it.movies.subList(0, movieCountPref)
                     shareDownloadedMovies(trimmedList)
                     adapter.items = trimmedList

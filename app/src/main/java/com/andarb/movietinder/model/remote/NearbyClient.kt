@@ -24,6 +24,7 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
+import com.google.android.material.badge.BadgeDrawable
 import kotlinx.serialization.json.Json
 
 /**
@@ -31,14 +32,15 @@ import kotlinx.serialization.json.Json
  */
 class NearbyClient(
     private val application: Application,
-    private val nearbyMovieIDs: MutableLiveData<List<Int>>,
+    private val nearbyMovieIDs: MutableLiveData<List<Int>?>,
     private val nearbyMovies: MutableLiveData<List<Movie>>,
     private var endpoints: MutableLiveData<Endpoints>
 ) {
     private val strategy = Strategy.P2P_POINT_TO_POINT
     val connections = Nearby.getConnectionsClient(application.applicationContext)
+    lateinit var matchesBadge: BadgeDrawable
     var localDeviceName = application.getString(R.string.error_insufficient_permissions_devicename)
-    private val disconnectedToast: Toast = Toast.makeText(
+    private val toastMessage: Toast = Toast.makeText(
         application,
         "",
         Toast.LENGTH_LONG
@@ -55,6 +57,10 @@ class NearbyClient(
             }
             .addOnFailureListener { e: java.lang.Exception? ->
                 // Nearby Connections failed to request the connection.
+                toastMessage.apply {
+                    setText(application.getString(R.string.toast_failed_connecting))
+                    show()
+                }
             }
     }
 
@@ -93,7 +99,7 @@ class NearbyClient(
     private val endpointDiscoveryCallback: EndpointDiscoveryCallback =
         object : EndpointDiscoveryCallback() {
             override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-                endpoints.addElement(Endpoint(endpointId, info.endpointName))
+                endpoints.addElement(Endpoint(endpointId, info.endpointName), localDeviceName)
             }
 
             override fun onEndpointLost(endpointId: String) {
@@ -108,7 +114,10 @@ class NearbyClient(
         object : ConnectionLifecycleCallback() {
             override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
                 // Automatically accept the connection on both sides.
-                RemoteEndpoint.hasInitiatedConnection = connectionInfo.isIncomingConnection
+                RemoteEndpoint.apply {
+                    hasInitiatedConnection = connectionInfo.isIncomingConnection
+                    deviceName = connectionInfo.endpointName
+                }
                 connections.acceptConnection(endpointId, payloadCallback)
             }
 
@@ -117,9 +126,11 @@ class NearbyClient(
                     ConnectionsStatusCodes.STATUS_OK -> {
                         // We're connected! Can now start sending and receiving data.
                         endpoints.markConnected(endpointId)
+
+                        RemoteEndpoint.hasSentMatches = false
                         connections.stopDiscovery()
                         connections.stopAdvertising()
-                        disconnectedToast.setText(
+                        toastMessage.setText(
                             application.getString(
                                 R.string.toast_disconnected_endpoint,
                                 RemoteEndpoint.deviceName
@@ -129,26 +140,46 @@ class NearbyClient(
 
                     ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                         // The connection was rejected by one or both sides.
+                        toastMessage.apply {
+                            setText(application.getString(R.string.toast_connection_rejected))
+                            show()
+                        }
+                        RemoteEndpoint.reset()
                     }
 
                     ConnectionsStatusCodes.STATUS_ERROR -> {
                         // The connection broke before it was able to be accepted.
+                        toastMessage.apply {
+                            setText(application.getString(R.string.toast_connection_error))
+                            show()
+                        }
+                        RemoteEndpoint.reset()
                     }
 
                     ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT -> {
                         // The connection broke before it was able to be accepted.
+                        toastMessage.apply {
+                            setText(application.getString(R.string.toast_already_connected))
+                            show()
+                        }
                     }
 
                     else -> {
                         // Unknown status code
+                        toastMessage.apply {
+                            setText(application.getString(R.string.toast_connection_error))
+                            show()
+                        }
+                        RemoteEndpoint.reset()
                     }
                 }
             }
 
             override fun onDisconnected(endpointId: String) {
                 // We've been disconnected from this endpoint. No more data can be sent or received
-                disconnectedToast.show()
+                toastMessage.show()
                 RemoteEndpoint.reset()
+                if (!RemoteEndpoint.hasSentMatches) nearbyMovieIDs.value = null
 
                 val notificationManagement = NotificationManagement(application)
                 notificationManagement.cancel()
@@ -167,7 +198,10 @@ class NearbyClient(
                 val stringPayload: String = payloadBytes.decodeToString()
 
                 when (stringPayload[0]) {
-                    'i' -> {  // remote device sent their chosen movies
+                    'i' -> {  // remote device has sent their chosen movies
+                        matchesBadge.isVisible = true
+                        RemoteEndpoint.hasSentMatches = true
+
                         nearbyMovieIDs.value =
                             stringPayload.substring(1).split(",").map { it.toInt() }
 
@@ -182,7 +216,7 @@ class NearbyClient(
                     }
 
                     'm' -> nearbyMovies.value =
-                        Json.decodeFromString(stringPayload.substring(1)) // host shared downloaded movies
+                        Json.decodeFromString(stringPayload.substring(1)) // remote device has sent downloaded movies
                     else -> nearbyMovieIDs.value = emptyList()
                 }
             }
@@ -196,14 +230,14 @@ class NearbyClient(
 }
 
 /**
- * Keeps Endpoint connection state and relevant information
+ * Keeps Endpoint connection state and other relevant information
  */
 object RemoteEndpoint {
     var deviceName = ""
     var deviceId = ""
     var isConnected = false
     var hasInitiatedConnection = false
-    var hasReceivedMatches = false
+    var hasSentMatches = false
 
     fun reset() {
         deviceName = ""

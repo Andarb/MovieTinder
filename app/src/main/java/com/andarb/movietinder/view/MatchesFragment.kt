@@ -32,7 +32,7 @@ class MatchesFragment : Fragment() {
             sharedViewModel.onClick(movie, clickType)
         }
 
-        if (RemoteEndpoint.hasReceivedMatches) {
+        if (RemoteEndpoint.hasSentMatches) {
             displayView(binding.recyclerviewMatches)  // matches received
         } else if (RemoteEndpoint.isConnected) {
             displayView(binding.progressbarMatches) // awaiting matches
@@ -44,8 +44,10 @@ class MatchesFragment : Fragment() {
         binding.recyclerviewMatches.layoutManager = LinearLayoutManager(context)
 
         sharedViewModel.remoteMovieIDs.observe(viewLifecycleOwner) { remoteIDs ->
+
             if (remoteIDs != null) {
                 displayView(binding.recyclerviewMatches)
+                sharedViewModel.nearbyClient.matchesBadge.isVisible = false
 
                 val localIDs = sharedViewModel.localLikedMovies.map { it.id }
                 val matchedIDs: List<Int> = localIDs.intersect(remoteIDs.toSet()).toList()
@@ -55,9 +57,11 @@ class MatchesFragment : Fragment() {
                     localMovies.filter { localMovie ->
                         localMovie.id in matchedIDs
                     }
+                if (matchedMovies.isEmpty()) displayView(binding.tvIvNoMatches)
                 adapter.items = matchedMovies
 
-                if (matchedMovies.isEmpty()) displayView(binding.tvIvNoMatches)
+            } else if (!RemoteEndpoint.hasSentMatches && !RemoteEndpoint.isConnected) { // friend disconnected while fragment is active
+                displayView(binding.tvIvNotConnected)
             }
         }
 

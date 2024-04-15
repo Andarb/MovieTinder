@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 33
+        targetSdkVersion 34
         compileSdk 34
     }
     namespace 'com.yuyakaido.android.cardstackview'
