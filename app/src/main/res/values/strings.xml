@@ -65,6 +65,10 @@
     <string name="toast_disconnected_endpoint">%1$s disconnected</string>
     <string name="toast_selection_received">%1$s has chosen</string>
     <string name="toast_device_name_limitations">Name must not be longer than 12 characters, and one line only</string>
+    <string name="toast_connection_rejected">Connection rejected</string>
+    <string name="toast_already_connected">Already connected to this device</string>
+    <string name="toast_connection_error">Unknown connection error</string>
+    <string name="toast_failed_connecting">Failed to connect</string>
 
     /** Progressbar titles */
     <string name="progressbar_searching">Searching</string>

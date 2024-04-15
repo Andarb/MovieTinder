@@ -35,6 +35,7 @@ import com.andarb.movietinder.model.remote.NearbyClient
 import com.andarb.movietinder.model.remote.RemoteEndpoint
 import com.andarb.movietinder.view.adapters.EndpointAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlin.random.Random
 
 
@@ -162,6 +163,13 @@ class ConnectFragment : Fragment() {
                 getString(R.string.preferences_device_name_key),
                 defaultName
             ).toString()
+
+            if (!RemoteEndpoint.hasSentMatches) {
+                val bottomNavigation: BottomNavigationView =
+                    requireActivity().findViewById(R.id.bottom_navigation)
+                matchesBadge = bottomNavigation.getOrCreateBadge(R.id.matchesFragmentNav)
+                matchesBadge.isVisible = false
+            }
 
             if (localDeviceName == defaultName) with(preferences.edit()) {
                 putString(getString(R.string.preferences_device_name_key), defaultName)

@@ -18,7 +18,7 @@ import com.andarb.movietinder.model.remote.RemoteEndpoint
 
 
 /**
- * Sets up bottom navigation and navigation controller
+ * Sets up bottom navigation, navigation controller and notifications
  */
 class MainActivity : AppCompatActivity() {
 
@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
