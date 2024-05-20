@@ -14,7 +14,7 @@ import kotlin.properties.Delegates
 /**
  * Binds downloaded movie details for user to choose from.
  */
-class MovieCardAdapter : RecyclerView.Adapter<MovieCardAdapter.ListViewHolder>() {
+class SelectionAdapter : RecyclerView.Adapter<SelectionAdapter.ListViewHolder>() {
 
     var items: List<Movie> by Delegates.observable(emptyList()) { _, oldList, newList ->
         notifyChange(oldList, newList)

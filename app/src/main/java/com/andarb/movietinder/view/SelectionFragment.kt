@@ -11,7 +11,7 @@ import androidx.preference.PreferenceManager
 import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentSelectionBinding
 import com.andarb.movietinder.model.remote.RemoteEndpoint
-import com.andarb.movietinder.view.adapters.MovieCardAdapter
+import com.andarb.movietinder.view.adapters.SelectionAdapter
 import com.andarb.movietinder.viewmodel.MainViewModel
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager
 import com.yuyakaido.android.cardstackview.CardStackListener
@@ -24,7 +24,7 @@ import com.yuyakaido.android.cardstackview.Direction
 class SelectionFragment : Fragment(), CardStackListener {
 
     private lateinit var binding: FragmentSelectionBinding
-    private val adapter = MovieCardAdapter()
+    private val adapter = SelectionAdapter()
     private val sharedViewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(

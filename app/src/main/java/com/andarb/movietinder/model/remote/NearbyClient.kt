@@ -179,6 +179,7 @@ class NearbyClient(
                 // We've been disconnected from this endpoint. No more data can be sent or received
                 toastMessage.show()
                 RemoteEndpoint.reset()
+
                 if (!RemoteEndpoint.hasSentMatches) nearbyMovieIDs.value = null
 
                 val notificationManagement = NotificationManagement(application)
@@ -202,8 +203,12 @@ class NearbyClient(
                         matchesBadge.isVisible = true
                         RemoteEndpoint.hasSentMatches = true
 
-                        nearbyMovieIDs.value =
-                            stringPayload.substring(1).split(",").map { it.toInt() }
+                        try {
+                            nearbyMovieIDs.value =
+                                stringPayload.substring(1).split(",").map { it.toInt() }
+                        } catch (e: Exception) {  // if no matches sent, or gibberish received
+                            nearbyMovieIDs.value = emptyList()
+                        }
 
                         Toast.makeText(
                             application,
@@ -217,7 +222,6 @@ class NearbyClient(
 
                     'm' -> nearbyMovies.value =
                         Json.decodeFromString(stringPayload.substring(1)) // remote device has sent downloaded movies
-                    else -> nearbyMovieIDs.value = emptyList()
                 }
             }
         }
@@ -234,12 +238,14 @@ class NearbyClient(
  */
 object RemoteEndpoint {
     var deviceName = ""
+    var lastDeviceName = ""
     var deviceId = ""
     var isConnected = false
     var hasInitiatedConnection = false
     var hasSentMatches = false
 
     fun reset() {
+        lastDeviceName = deviceName.ifEmpty { lastDeviceName }
         deviceName = ""
         deviceId = ""
         isConnected = false

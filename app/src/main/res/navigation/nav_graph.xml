@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/connectFragmentNav"
         android:name="com.andarb.movietinder.view.ConnectFragment"
-        android:label="Devices nearby">
+        android:label="@string/action_bar_title_connect">
         <action
             android:id="@+id/action_connectFragment_to_selectionFragment"
             app:destination="@id/selectionFragmentNav" />
@@ -30,16 +30,16 @@
     <fragment
         android:id="@+id/matchesFragmentNav"
         android:name="com.andarb.movietinder.view.MatchesFragment"
-        android:label="Matched movies" />
+        android:label="@string/action_bar_title_no_matches" />
 
     <fragment
         android:id="@+id/historyFragmentNav"
         android:name="com.andarb.movietinder.view.HistoryFragment"
-        android:label="Previously encountered" />
+        android:label="@string/action_bar_title_history" />
 
     <fragment
         android:id="@+id/settingsFragmentNav"
         android:name="com.andarb.movietinder.view.SettingsFragment"
-        android:label="Settings" />
+        android:label="@string/action_bar_title_settings" />
 
 </navigation>

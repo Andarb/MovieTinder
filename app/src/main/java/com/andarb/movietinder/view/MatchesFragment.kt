@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
+import com.andarb.movietinder.R
 import com.andarb.movietinder.databinding.FragmentMatchesBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.model.remote.RemoteEndpoint
@@ -31,6 +33,7 @@ class MatchesFragment : Fragment() {
         val adapter = MatchesAdapter { movie: Movie, clickType: ClickType ->
             sharedViewModel.onClick(movie, clickType)
         }
+        val actionBar = (requireActivity() as AppCompatActivity).supportActionBar
 
         if (RemoteEndpoint.hasSentMatches) {
             displayView(binding.recyclerviewMatches)  // matches received
@@ -38,14 +41,18 @@ class MatchesFragment : Fragment() {
             displayView(binding.progressbarMatches) // awaiting matches
         } else {
             displayView(binding.tvIvNotConnected) // not connected to anyone
+            actionBar?.title = getString(R.string.action_bar_title_no_matches)
         }
 
         binding.recyclerviewMatches.adapter = adapter
-        binding.recyclerviewMatches.layoutManager = LinearLayoutManager(context)
+        binding.recyclerviewMatches.layoutManager = GridLayoutManager(requireActivity(), 2)
 
         sharedViewModel.remoteMovieIDs.observe(viewLifecycleOwner) { remoteIDs ->
-
             if (remoteIDs != null) {
+                val matchedDevice =
+                    RemoteEndpoint.deviceName.ifEmpty { RemoteEndpoint.lastDeviceName }
+                actionBar?.title = getString(R.string.action_bar_title_has_matches, matchedDevice)
+
                 displayView(binding.recyclerviewMatches)
                 sharedViewModel.nearbyClient.matchesBadge.isVisible = false
 
