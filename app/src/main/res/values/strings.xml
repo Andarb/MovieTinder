@@ -86,6 +86,13 @@
     <string name="error_insufficient_permissions_devicename">MissingPermissionsName</string>
     <string name="error_bluetooth_not_found">ERROR - Bluetooth Not Found!</string>
 
+    /** Action Bar Titles */
+    <string name="action_bar_title_connect">Devices nearby</string>
+    <string name="action_bar_title_has_matches">%1$s matches</string>
+    <string name="action_bar_title_no_matches">Matched movies</string>
+    <string name="action_bar_title_history">Previously encountered</string>
+    <string name="action_bar_title_settings">Settings</string>
+
     /** Notification setup */
     <string name="notification_name">Connections</string>
     <string name="notification_description">Shows active devices</string>

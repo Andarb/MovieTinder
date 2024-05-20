@@ -76,8 +76,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val movieIds = localLikedMovies.map { it.id }
 
         // 'e' = empty payload, 'i' = movie id payload
-        val stringPayload: String = if (movieIds.isEmpty()) "e"
-        else 'i' + movieIds.joinToString(",")
+        val stringPayload: String = 'i' + movieIds.joinToString(",")
 
         val bytesPayload = Payload.fromBytes(stringPayload.toByteArray())
         nearbyClient.connections.sendPayload(RemoteEndpoint.deviceId, bytesPayload)

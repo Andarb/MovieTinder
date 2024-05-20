@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.andarb.movietinder.R
-import com.andarb.movietinder.databinding.ItemMovieEntryBinding
+import com.andarb.movietinder.databinding.ItemMatchBinding
 import com.andarb.movietinder.model.Movie
 import com.andarb.movietinder.util.ClickType
 import com.andarb.movietinder.util.load
@@ -23,24 +23,19 @@ class MatchesAdapter(private val itemClickListener: (Movie, ClickType) -> Unit) 
     }
 
     class ListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val binding = ItemMovieEntryBinding.bind(itemView)
+        private val binding = ItemMatchBinding.bind(itemView)
 
         fun bind(item: Movie, clickListener: (Movie, ClickType) -> Unit) {
             with(binding) {
-                imageEntryLike.setOnClickListener { clickListener(item, ClickType.LIKE) }
-                imageEntryDelete.setOnClickListener { clickListener(item, ClickType.DELETE) }
-                imageEntryPoster.load(item.posterUrl, item.id)
-                textEntryTitle.text = item.title
-                textEntryRating.text = item.rating.toString()
-                textEntryDate.text = item.date
-                textEntryOverview.text = item.overview
+                imageMoviePoster.setOnClickListener { clickListener(item, ClickType.LIKE) }
+                imageMoviePoster.load(item.posterUrl, item.id)
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_movie_entry, parent, false)
+            .inflate(R.layout.item_match, parent, false)
 
         return ListViewHolder(view)
     }
